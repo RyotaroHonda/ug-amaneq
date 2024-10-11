@@ -21,7 +21,7 @@ AMANEQのファームウェアは両方のクロックドメインにクロッ�
 グローバルクロックドメインにおいてどのPLLがクロック復元を行うかはファームウェアに依存します。[図](#FW-VIEW)ではMMCMが点線で接続されていますが、実際のファームウェアではMMCMかCDCE62002どちらか一方が使われています。
 
 
-![FW-VIEW](firmware-block.png "Block diagram of AMANEQ firmware"){: #FW-VIEW width="100%"}
+![FW-VIEW](firmware-block.png "Block diagram of AMANEQ firmware"){: #FW-VIEW width="80%"}
 
 ## Data link
 AMANEQではGbEの[SiTCP](https://www.sitcp.net/)と10GbEの[SiTCP-XG](https://www.bbtech.co.jp/products/sitcp-xg-license/)の両方をサポートしています。詳しくはリンク先の資料を参照してください。
