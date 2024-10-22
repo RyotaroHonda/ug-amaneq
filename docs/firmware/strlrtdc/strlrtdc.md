@@ -21,6 +21,7 @@ Streaming low-resolution TDC (Str-LRTDC)は129ch入力の1ns精度連続読み�
 
 - Data word width:            64bit
 - Acceptable max input rate:  ~14MHz/board
+- System clock freq.:         125MHz
 ```
 
 ### History
