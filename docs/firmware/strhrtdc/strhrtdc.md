@@ -16,7 +16,7 @@ Streaming high-resolution TDC (Str-HRTDC)は20ps精度の連続読み出しTDC�
 
 - Number of inputs:           64
 - Timing measurements:        Both edges
-- TDC precision:              ~20ps
+- TDC precision:              ~23ps
 - Double hit resolution:      ~2ns
 - Max TOT length:             4000ns
 
@@ -99,3 +99,65 @@ Lower slotにだけメザニンカードを搭載すると動作しません。
 |2| Not in use | |
 |3| Not in use | |
 |4| Not in use | |
+
+## Local bus modules
+
+Str-HRTDCでは2つのFPGAが接続されているので、メザニン側のFPGAを制御するためにlocal busの拡張が必要になります。
+2つのFPGAは[図](#BUS-BRIDGE)に示すようにbus bridge primary/secondaryを通じて接続されています。
+AMANEQ側のbus bridge primary (BBP) はlocal bus moduleです。
+AMANEQ側から見るとメザニンFPGAへの通信はBBPへの読み書きに見えます。
+一方、メザニン側のbus bridge secondaryはlocal bus controllerから見ると外部リンクに見えます。
+
+BBPを介してのアクセスには通常の通信よりも余計に手順がかかります。
+そのため、hul-common-libで用意している読み書き用の実行体では煩雑になってしまうため、amaneq-softで一連の通信をまとめたwrite/read_mzn_registerという実行体を用意しています。
+メザニンFPGAへアクセスするときはこの実行体を使用してください。
+
+メザニンベースコネクタを介して2つのFPGAつながっているため、しっかりつながっていないと通信エラーを起こします。
+一度エラーを起こすとlocal busが応答しなくなるため、リセットボタンによるハードウェアリセットか、MIKUMARIによる遠隔リセットが必要になります。
+
+![BUS-BRIDGE](bus-bridge.png "Local bus bridge"){: #BUS-BRIDGE width="80%"}
+
+Str-LRTDC Baseには8個のローカルバスモジュールが存在します。
+以下がローカルバスアドレスのマップです。
+
+|Local Module|Address range|
+|:----|:----|
+|Mikumari Utility        |0x0000'0000 - 0x0FFF'0000|
+|DAQ Controller          |0x2000'0000 - 0x2FFF'0000|
+|BusBridgePrimary upper  |0x3000'0000 - 0x3FFF'0000|
+|BusBridgePrimary lower  |0x4000'0000 - 0x4FFF'0000|
+|Scaler                  |0x8000'0000 - 0x8FFF'0000|
+|CDCE62002 Controller    |0xB000'0000 - 0xBFFF'0000|
+|Self Diagnosis System   |0xC000'0000 - 0xCFFF'0000|
+|Flash Memory Programmer |0xD000'0000 - 0xDFFF'0000|
+|Bus Controller          |0xE000'0000 - 0xEFFF'0000|
+
+Mezzanine Str-LRTDCには5個のローカルバスモジュールが存在します。
+メザニン側は使用するアドレスのレンジが異なっています。
+
+|Local Module|Address range|
+|:----|:----|
+|Mikumari Utility        |0x0000 - 0x0FFF|
+|DAQ Controller          |0x1000 - 0x1FFF|
+|Streaming TDC           |0x2000 - 0x2FFF|
+|Scaler                  |0x8000 - 0x8FFF|
+|Self Diagnosis System   |0xC000 - 0xCFFF|
+|Bus Controller          |0xE000 - 0xEFFF|
+
+## Module reset
+
+
+
+## Streaming-TDC block
+
+Streaming TDCの基本構造はStr-LRTDCと同様です。まずは、Str-LRTDCのページを参照してください。
+ここではHR-TDCに特有の事を記述します。
+
+### Data merging block
+
+Str-HRTDCではfront-mergerとback-mergerが物理的に2つのFPGAに分かれているため、限られた信号線でstreaming TDC全体を制御しています。
+そのため、高負荷になった時の制御がうまくいかずデータ破損がStr-LRTDCに比べると起こりやすいです。
+また、破損が発生した時に復帰がうまくいかない事もあります。
+多くの場合で、データ破損はback-merger上のlocal heartbeat frame number mismatchとして検出されます。
+Self recovery modeをONにしている場合、この時自動復帰を試みますが、前述のように自動復帰できない事があります。
+Delimiter flagsを監視し、このエラーが発生し続けるようであればDAQを止めてモジュールリセットを試みてください。

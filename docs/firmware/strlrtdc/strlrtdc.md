@@ -433,7 +433,7 @@ PCから情報をここへ書き込んでおくと、解析の時にデータベ
 |kTdcMaskMznD      | 0x1030'0000|   W/R|32|Channel mask for 96-127ch  (default: 0x0)|
 |kTdcMaskEx        | 0x10E0'0000|   W/R|32|Channel mask for 128-159ch (default: 0x0)|
 |	  		    | | | | |
-|kEnBypass         | 0x1040'0000|   W/R|2|Enable bypass for 2-us delay buffer and paring unit. (default: 0x0) <br> 1st-bit: Enable bypass for 2-us delay buffer <br> 2nd-bit: Enable bypass for paring unit|
+|kEnBypass         | 0x1040'0000|   W/R|2|Enable bypass for 2-us delay buffer and paring unit. (default: 0x0) <br> 1st-bit: Enable bypass for 2-us delay buffer <br> 2nd-bit: Enable bypass for paring unit <br> 3rd-bit: Disable the LACCP fine offset correction. If disabling it, non-zero value appears in the LACCP fine offset region in 1st delimiter word.|
 |	  		    | | | | |
 |kTotFilterCtrl    | 0x1050'0000|   W/R|2|Enable TOT filter. (default: 0x0) <br> 1st-bit: Enable TOT filter unit <br> 2nd-bit: Enable zero-TOT through mode|
 |kTotMinTh         | 0x1060'0000|   W/R|16|TOT filter low threshold|
