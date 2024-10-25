@@ -52,5 +52,8 @@ nav:
     - Overview: firmware/overview/overview.md
     - Skeleton: firmware/skeleton/skeleton.md
     - Str-LRTDC: firmware/strlrtdc/strlrtdc.md
+    - Str-HRTDC: firmware/strhrtdc/strhrtdc.md
+    - MikuCLockRoot: firmware/clockroot/clockroot.md
+    - MikuCLockHub: firmware/clockhub/clockhub.md
   - Software: software/software.md
   - Practical Usage: practical/practical.md

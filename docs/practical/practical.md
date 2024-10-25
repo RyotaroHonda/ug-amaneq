@@ -46,6 +46,16 @@ SiTCPおよびSiTCP-XGの事については、BBT社が管理しています。�
 - RUN毎にモジュールリセットをかけたらおかしくなった
     - RUN毎にモジュールリセットをしないでください。一度動くようになったら放置でよいです。
 
+## Recommended setting
+
+- Str-LRTDC
+    - Tdc maskを適切に設定する
+    - Self recovery modeをONにする
+- Str-HRTDC
+    - AutoSwitchをONにする
+    - Tdc maskを適切に設定する
+    - Self recovery modeをONにする
+
 ## About data taking
 
 連続読み出しDAQでは入力ヒット信号は全てPCへ送信されます。
