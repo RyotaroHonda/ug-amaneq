@@ -146,12 +146,35 @@ Mezzanine Str-LRTDCには5個のローカルバスモジュールが存在しま
 
 ## Module reset
 
+![RESET](reset-path.png "Local bus bridge"){: #RESET width="80%"}
 
+[図](#RESET)にStr-HRTDCのリセット系統を示します。
+リセットボタンはAMANEQとメザニン上のFPGA両方にリセットを発行する最も強力な方法ではありますが、MIKUMARIを含めてすべてのブロックをリセットしてしまうので、実験中に気軽に押すことはお勧めしないです。
+最終手段として使ってください。
+遠隔でモジュールリセットを行う場合は以下の手順で行ってください。
+
+- Local busが正常に応答する場合
+    1. Mezzanineのlocal bus controller (BCT) からユーザーリセットを発効する
+    2. AMANEQのBCTからユーザーリセットを発行する
+- Mezzanine側のlocal busが正常に応答しない場合
+    1. DAQ controller からforce resetを発行しメザニンを初期化する
+    2. AMANEQ側のBCTからユーザーリセットを発行する
+- AMANEQ側のlocal busが正常に動作しない場合
+    1. MIKUMARI経由でAMANEQへリセットを行う
+    2. DAQ controller からforce resetを発行しメザニンを初期化する
+
+いずれの場合においても、リセット後にamaneq-softのinitializeを実行してdaq data receiverとtapped-delay lineのLUTの校正を行ってください。
 
 ## Streaming-TDC block
 
 Streaming TDCの基本構造はStr-LRTDCと同様です。まずは、Str-LRTDCのページを参照してください。
 ここではHR-TDCに特有の事を記述します。
+また、tapped-delay lineによる高分解能時間測定については[HULのユーザーガイド](https://hul-official.gitlab.io/hul-ug/firmware/main/#mezzanine-hr-tdc-hul-hr-tdc-base)も参考にしてください。
+
+### Data Receiver
+
+メザニン側はDAQデータをDDR transmitterを通して8 GbpsでAMANEQ側へ転送します。
+データをAMANEQ側で受け取るためにはDDR receiverを初期化する必要があり、電源投入後とモジュールリセット後にはamaneq-softのinitialize実行体を使って初期化してください。
 
 ### Data merging block
 
@@ -161,3 +184,197 @@ Str-HRTDCではfront-mergerとback-mergerが物理的に2つのFPGAに分かれ�
 多くの場合で、データ破損はback-merger上のlocal heartbeat frame number mismatchとして検出されます。
 Self recovery modeをONにしている場合、この時自動復帰を試みますが、前述のように自動復帰できない事があります。
 Delimiter flagsを監視し、このエラーが発生し続けるようであればDAQを止めてモジュールリセットを試みてください。
+
+### Clock synchronization
+
+2つのメザニン上のFPGAのシステムクロックは、AMANEQ上のシステムクロックに対してそれぞれ異なった位相を持っています。
+Back-merger上でハートビートフレームを結合するためには、あらかじめLACCP fine offsetによって時刻補正を行っている必要があります。
+そうしないと、位相関係の違うフレームを束ねる事になってしまうためです。
+LACCP fine offsetは2つのFPGAで異なっており、デリミターワード上のLACCP fine offsetの領域は1つしかないため、オフラインで位相関係をただすことはできません。
+**そのため、Str-HRTDCではFPGA内でのLACCP fine offsetによる時刻補正をオフにすることが出来ないようになっています。**
+
+### Throttling
+
+**Str-HRTDCではthrottling 機能はすべてメザニン側のFPGAに搭載されています。**
+Str-LRTDCではoutput throttlingはvital blockの最後に実装されていますが、Str-HRTDCではfront-mergerの後に実装されています。
+この理由は、メザニン上で動いているstreaming TDCはお互い独立したDAQ機能であるためです。
+AMANEQ上のFPGAは2つの独立したモジュールのデータをまとめて、1つのモジュールのように見せかけています。
+メザニンを2つ搭載してる際には、**heartbeat frame throttlingの設定が2つのFPGAで同じになるようにしてください。**
+AMANEQ側のFPGAには設定できるstreaming TDCの機能は存在しません。
+
+### Data structure
+#### TDC data category
+
+```
+Str-HRTDC Leading/trailing data word
+MSB                                                                                                     LSB
+[    6-bit    ][    7-bit    ][           22-bit           ][                   29-bit                   ]
+   Data type       Channel                 TOT                                TDC timing
+
+Throttling data word
+[    6-bit    ][    7-bit    ][        16-bit        ][        16-bit        ][          18-bit          ]
+   Data type       Channel            Reserve            Throttling timing            Zero padding
+```
+
+以下は先頭の6-bit data typeのリストです。
+Input throttling type-1のデータタイプは予約だけされています。
+
+|6-bit data-type pattern|Type|
+|:----:|:----|
+|b001011|Leading edge timing|
+|b001101|Trailing edge timing|
+|b011001|Input throttling type-1 start|
+|b010001|Input throttling type-1 end|
+|b011010|Input throttling type-2 start|
+|b010010|Input throttling type-2 end|
+
+Leading/trailing data wordではLSB精度はTOT、TDCタイミングともに1/1024 ns (~0.98 ps)です。
+約1psまでデータビットは用意されていますが、1psの時間分解能を持っているわけではないです。
+これはFPGAが持っているtapped-delay lineのcalibration LUTの出力を表現するために必要なビット長がこの桁まであったためです。
+TOT領域は22-bit確保されていますが、最大TOT値は4000nsです。それ以上のTOT値が返ってくることはありません。
+TDCタイミング領域は内部的には16-bit fine-scale timestamp + 13-bit fine timingとなっています。
+
+Throttling data wordはStr-LRTDCと同様です。
+
+#### Heartbeat delimiter category
+
+Str-LRTDCと同様です。
+
+### Register address map
+
+|Register name|Address|Read/Write|Bit width|Comment|
+|:----|:----|:----:|:----:|:----|
+|     |     |      | AMANEQ |    |
+|  -  |  -  |  -   | -      | -  |
+|     |     |      | Mezzanine |    |
+|kAddrControl      | 0x2010     |   W/R|2| Tdc unit control bits (default: 0x0) <br> 1st-bit: Enable to  bypass the calibration LUT. <br> 2nd-bit: Enable automatic page switch for the calibration LUT.|
+|kAddrReqSwitch    | 0x2020     |   W  |1| Manually switch the calibration LUT page |
+|kAddrStatus       | 0x2030     |   R  |1| Status register of the tdc unit |
+|kTdcMaskMain      | 0x2040     |   W/R|32|Channel mask for 0-31ch    (default: 0x0)|
+|	  		    | | | | |
+|kEnBypass         | 0x2050     |   W/R|2|Enable bypass for 2-us delay buffer and paring unit. (default: 0x0) <br> 1st-bit: Enable bypass for 2-us delay buffer <br> 2nd-bit: Enable bypass for paring unit. |
+|	  		    | | | | |
+|kTotFilterCtrl    | 0x2060     |   W/R|2|Enable TOT filter. (default: 0x0) <br> 1st-bit: Enable TOT filter unit <br> 2nd-bit: Enable zero-TOT through mode|
+|kTotMinTh         | 0x2070     |   W/R|22|TOT filter low threshold|
+|kTotMaxTh         | 0x2080     |   W/R|22|TOT filter high threshold|
+|	  		    | | | | |
+|kTrgEmuCtrl       | 0x2090     |   W/R|2|Set trigger emulation mode. (default: 0x0) <br> 1st-bit: Enable trigger gate mode <br> 2nd-bit: Enable Veto gate mode|
+|kTrgEmuDelay      | 0x20A0     |   W/R|8|Set the delay from the trigger (veto) input to opening the trigger (veto) gate. LSB precision is 8ns.|
+|kTrgEmuWidth      | 0x20B0     |   W/R|16|Set the trigger (veto) gate width. LSB precision is 8ns.|
+|			    | | | | |
+|kHbfThrottCtrl    | 0x20C0     |   W/R|4|Set the heartbeat frame throttling condition. <br> 0x0: Disable (default) <br> 0x1: Only data for frame numbers that are multiples of 2 is acquired. <br> 0x2: Only data for frame numbers that are multiples of 4 is acquired. <br> 0x4: Only data for frame numbers that are multiples of 8 is acquired. <br> 0x8: Only data for frame numbers that are multiples of 16 is acquired.|
+|			    | | | | |
+|kHbdUserReg       | 0x20D0     |   W|16| The register value to be embedded to the 2nd delimiter word.|
+| | | | | |
+|kSelfRecoveryMode | 0x20E0     |   W/R|1| Enable the automatic recovery process for the local heartbeat frame mismatch (default: 0x0). |
+
+**補足説明**
+
+- ControlBits
+    - Calibration LUTをバイパスするとraw tap number (0-63)がTDCデータの下位ビット領域に現れますが、デバッグ用の機能のため開発者以外では使用しないでください。
+    - 入力が蓄積して次のLUTページが準備できた段階で自動的に新しいページへスイッチするようになります。ONにすることを推奨します。
+- ReqSwitch
+    - Calibration LUTページをマニュアルでスイッチします。自動スイッチ機能はOFFにしてから実行してください。
+- Status
+    - 1st-bit: Readiness of the next calibration LUT page
+- TdcMask
+    - TdcMaskをセットすると該当チャンネルからTDCデータが出力されなくなります。
+    - LSB側が若いチャンネル番号に対応します。
+    - Scalerへは影響を与えません。
+- EnBypass
+    - 2-us delay bufferをバイパスする機能は現状DAQ機能に何も変化を与えません。
+    - ペアリングユニットをバイパスすると立下りデータが別に返ってきます。
+- TotFilter
+    - Zero-TOT through modeではたとえ下限値が設定されていたとしてもTOTが0のデータを例外的に通過させます。
+    - 閾値設定のLSB精度はTDCと同じ~0.98psです。
+- TrgEmu
+    - Trigger modeではトリガー入力によりデータを通過させるためのゲートを開きます。Veto modeではベト入力によりデータをブロックするゲートを開きます。
+    - kTrgEmuCtrlには0x3を設定できません。
+- SelfRecoveryMode
+    - Local heartbeat frame number mismatch (delimiter flag 10th bit)が発生した時に自動復帰するプロセスを有効にします。
+    - このモードが有効の時local heartbeat frame mismatchが起きると、自動的にDAQ状態をOFFしてデータ送信を止め、データマージングブロックをリセットしてからDAQ状態をONしデータ送信を再開します。
+    - ソフトウェアからは数フレームほどデータブロックが抜けたように見えます。
+
+## Scaler
+
+スケーラー機能の概要とデータ構造はStr-LRTDCと同様ですが、Str-HRTDCでは3つのスケーラーが独立に動いています。
+
+- AMANEQのスケーラー
+    - Real time, Mikumari error number, Trigger request, Trigger rejected のみを記録しています。
+- Mezzanine cardのスケーラー
+    - Trigger requestとTrigger rejected以外の全てを2台のFPGAで独立に記録しています。
+
+### Register address map
+
+|Register name|Address|Read/Write|Bit width|Comment|
+|:----|:----|:----:|:----:|:----|
+|     |     |      |      | AMANEQ |
+|     |     |      |      | Same as for Str-LRTDC |
+|     |     |      |      | Mezzanine |
+|kAddrScrReset  | 0x8000|  W|1| Reset signals <br> 0x1: Local reset <br> 0x2: Global reset <br> 0x4: FIFO reset|
+|kAddrLatchCnt  | 0x8010|  R|1| Send latch request|
+|kAddrNumCh     | 0x8020|  R|8| Number of words of scaler data block including system information (unit: words)|
+|kAddrStatus    | 0x8030|  R|8| Scaler unit status|
+|kAddrReadFIFO  | 0x8100|  R|-| Address to read data from FIFO|
+
+**補足説明**
+
+- AddrScrReset
+    - Local resetはアクセス先のスケーラーカウントのリセットを行います。
+    - Global resetはアクセス先のスケーラーカウントをリセットし、さらにMIKUMARIリンク経由でスケーラーリセット信号を下流モジュールへ送信します。MikuClockRootファームウェアでのみ有効な機能です。
+    - FIFO resetはアクセス先のFIFOの中身をリセットします。
+- LatchCnt
+    - このアドレスへ読み出しアクセスをするとラッチリクエストになります。
+- NumCh
+    - スケーラーデータブロックのワード数はファームウェアによって異なるので、何ワード読み出したらよいか知るためのレジスタです。読むべきワード数が得られます。
+- Status
+    - 1st-bit: FIFO empty
+    - others: Reserved
+- ReadFIFO
+    - 1-byteずつデータをFIFOから読み出すためのアドレスです。
+
+## Mikumari Utility
+
+### Register address map
+
+AMANEQ側のアドレスマップはStr-LRTDCと同様です。
+Overviewを参照してください。
+以下に、メザニン側のアドレスマップを示します。
+
+|Register name|Address|Read/Write|Bit width|Comment|
+|:----|:----|:----:|:----:|:----|
+|kAddrCbtLaneUp|0x0000|R|32|各ビットがMIKUMARIの物理層(CBT)の状態を示します。1で物理層がレディの状態です。どのビットがどのポートに対応するのか、何ビット目まで有効であるかは各ファームウェアに依存します。|
+|kAddrCbtTapValueIn|0x0010|R|5|CBTに設定されているIDELAYのタップ値を読み取ります (RegIndexによる指定が有効)|
+|kAddrCbtTapValueOut|0x0020|W|5|CBTに設定するべきIDELAYのタップ値を与えます (RegIndexによる指定が有効)|
+|kAddrCbtBitSlipIn|0x0030|R|4|CBTが行ったビットスリップの回数を読み取ります (RegIndexによる指定が有効)|
+|kAddrCbtInit|0x0040|W|32|CBTへ初期化命令を送ります。各ビットが各ポートへの初期化信号になっており、1で初期化の実行です。どのビットがどのポートに対応するのか、何ビット目まで有効であるかは各ファームウェアに依存します。|
+|kAddrMikumariUp|0x0050|R|32|各ビットがMIKUMARIリンクの状態を示します。1でリンクアップの状態です。どのビットがどのポートに対応するのか、何ビット目まで有効であるかは各ファームウェアに依存します。|
+|kAddrLaccpUp|0x0060|R|32|各ビットがLACCPの状態を示します。1で時刻同期が完了した状態です。どのビットがどのポートに対応するのか、何ビット目まで有効であるかは各ファームウェアに依存します。|
+|kAddrPartnerIpAddr|0x0070|R|32|接続先のSiTCPのIPアドレスを取得します（RegIndexによる指定が有効)|
+|kAddrHbcOffset|0x0080|R|16|Heartbeat counterへ与えらられたオフセット値を取得します。(LACCPのセカンダリ側のみ有効)|
+|kAddrLocalFineOffset|0x0090|R|16|LACCPが算出したlocal fine offsetを取得します。(LACCPセカンダリ側のみ有効)|
+|kAddrLaccpFineOffset|0x00A0|R|16|LACCPが算出したLACCP fine offsetを取得します。（LACCPセカンダリ側のみ有効)|
+|kAddrHbfState|0x00B0|W/R|1|ハートビートフレーム状態を設定します。1でDAQ running、0でDAQ idleです。そのクロック分配ネットワークのrootモジュールでのみ有効。|
+|kAddrRegIndex|0x0100|W/R|6|いくつかのレジスタにおいて読み書きを行う対象のポート番号を指定します。|
+|kAddrNumLinks|0x0200|R|6|そのファームウェアが備えているMIKUMARIリンクの数を取得します。|
+
+## DAQ Controller
+
+DAQ Controllerはmezzanine card側のDDR transmitterとAMANEQ側のDDR receiverの初期化を行う事が役割です。
+電源投入後やモジュールリセット後にamaneq-softのinitialize実行体を使って初期化してください。
+また、メザニンカード側では最初のcalibration LUTページを作るための補助も行います。
+ユーザーが各レジスタに個別にアクセスする事はないと思われます。
+
+### Register address map
+
+|Register name|Address|Read/Write|Bit width|Comment|
+|:----|:----|:----:|:----:|:----|
+|  AMANEQ   |     |      |      | AMANEQ |
+|kAddrInitDDR   | 0x2020'0000|  W  |1| Assert DDR receiver initialize signal|
+|kAddrCtrlReg   | 0x2030'0000|  W/R|6| DDR receiver control register <br> 1st-bit: Enable test mode upper <br> 2nd-bit: Enable test mode lower <br> 3rd-bit: Enable upper slot <br> 4th-bit: Enable lower slot <br> 5th-bit: Force reset upper <br> 6th-bit: Force reset lower|
+|kAddrRcvStatus | 0x2040'0000|  R  |4| Receiver status <br> 1st-bit: Bit aligned upper <br> 2nd-bit: Bit aligned lower <br> 3rd-bit: BitError upper <br> 4th-bit: Bit error lower|
+|  Mezzanine   |     |      |      | Mezzanine |
+|kAddrCtrlReg   | 0x1000     |  W/R|1| Enable transmitter test mode |
+|kAddrExtraPath | 0x1010     |  W/R|1| Calibrate the LUT for tapped-delay line with the clock signal |
+
+

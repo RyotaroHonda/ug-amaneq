@@ -263,3 +263,126 @@ Str-LRTDCはTDCマスクをセットするためのレジスタが5つもあり�
 ```shell
 set_tdcmask 192.168.10.16 0xffff0000 0x0 0xffff 0x0 0x0
 ```
+
+### Str-HRTDC
+
+メザニンカード上のFPGAへアクセスする実行体には`mzn`という表示がついています。
+どのカードへアクセスするのか指定する引数があるので、忘れずに入力してください。
+
+#### write_mzn_register
+
+SiTCPのRBCP経由でメザニンカード上のFPGAのlocal bus moduleへレジスタを書き込むための実行体です。
+Bus Bridge Primary経由してメザニン上のlocal busへブリッジする一連の手続きがまとめられています。
+内部的にはwrite_registerが複数回呼び出されています。
+
+IPアドレス192.168.10.10の上側メザニンカードに対して、ローカルアドレス0x4010へ0x1Aという値を2-byte幅で書き込む例です。メザニンカードの指定 (up/low/both)を忘れないでください。
+```shell
+                   [IP]          [Mzn]   [Addr]    [val] [bytes]
+write_mzn_register 192.168.10.10 up      0x4010    0x1A  2
+```
+
+#### read_mzn_register
+
+SiTCPのRBCP経由でメザニンカード上のFPGAのlocal bus moduleからレジスタ値を読み出すための実行体です。
+Bus Bridge Primary経由してメザニン上のlocal busへブリッジする一連の手続きがまとめられています。
+内部的にはwrite_registerとread_registerが複数回呼び出されています。
+
+IPアドレス192.168.10.10の上側メザニンカードに対して、ローカルアドレス0x4010から2-byte幅で値を読み出す例です。メザニンカードの指定 (up/low/both)を忘れないでください。
+```shell
+                  [IP]          [Mzn]   [Addr]    [bytes]
+read_mzn_register 192.168.10.10 up      0x4010    2
+```
+
+#### gen_mzn_userreset
+
+メザニンカード上のFPGAのLocal Bus ControllerからBCTリセットを発行します。
+FPGA内部の多くのローカルバスモジュールがリセットされるのでレジスタの再設定を行ってください。
+
+#### get_version_hrtdc
+
+Str-HRTDC BaseおよびMezzanine Str-HRTDCからバージョンを取得します。
+AMANEQとmezzanine cardの両方にアクセスします。
+
+#### initialize
+
+DDR Transmitter/Receiverの初期化とtapped-delay lineのcalibration LUTの最初のページの準備を行う実行体です。
+Str-HRTDCへ電源を投入したあとやモジュールリセット後に1度だけ実行してください。
+**一度動くようになったモジュールに対して何度も実行する事は非推奨です。**
+```
+#D : DDR initialize succeeded (MZN-U/D)
+#D LUT is ready! (MIF-U/D)
+```
+上記のようにDDRの初期化とLUTが準備できたことを示す表示が出れば成功です。
+原則失敗する事はないです。たまに失敗する事がある場合、メザニンカードの接触の問題があるかもしれません。
+一度カードを外して再度付けなおしてみてください。
+
+#### inject_mzn_sem_error
+
+開発者向けのデバッグツールです。メザニンカード上のFPGAのSEMを通じて任意の領域にエラーを発生させるために使います。ユーザー向けの機能ではないのでここでは説明を省略します。
+
+#### read_mzn_scr
+
+メザニンカード上のFPGAのスケーラーを読み出し、その結果をバイナリデータファイルへ保存する実行体です。
+読み出しバイト数の取得、FIFOが空である事の確認（およびFIFOリセット）、ラッチリクエストの送信、FIFO読み出し、ファイル書き出し、の一連のプロセスを実行します。
+
+以下の例では指定したIPアドレスのボードから読み出した結果をscaler.datへ保存します。引数の数が3つだと上書きモード、4つだと追記モードで動作します。追記モードでは既にファイルが存在する時、前のデータを消さずに追記します。
+```shell
+read_mzn_scr 192.168.10.10 up scaler.dat      (Overwrite mode)
+read_mzn_scr 192.168.10.10 up scaler.dat 1    (Append mode)
+```
+
+繰り返しスケーラー読み出しをする場合、この実行体をシェルスクリプトで何度も呼び出してもあまり高い周波数で読めません。
+プログラムを実行するオーバーヘッドがかさんだり、プログラム内で毎回読み出しバイト数を確認していたりするためです。
+高速に何度も読み出したい場合、この実行体のソースコードを参考にして自分でプログラムを書いてください。
+
+#### read_sem
+
+SEMにアクセスしてSEUを修正した回数、修正不可能な状態になっていないかの確認を行います。
+放射線が気になる環境では定期的に読み出して、修正不能なエラーが発生していないか確認してください。
+もし、`uncorrectable_error`フラグが立っていたらFPGAを再コンフィグしてください。
+
+#### read_mzn_xadc
+
+メザニンカード上のFPGAのXADCにアクセスしてFPGAの温度を取得します。
+**HR-TDCの性能を損なうため電源電圧の取得は行いません。**
+
+#### reconfig_mzn_fpga
+
+メザニンカード上のFPGAのSPIフラッシュメモリからFPGAを再コンフィグする命令を送信します。FPGAが即座にダウンするのでRBCP通信のタイムアウトが発生しますが、正常な動作です。
+メザニンカード上のFPGAのだけリコンフィグするのでAMANEQ側のFPGAの設定が取り残されます。
+全てのFPGAをリセットからinitializeを行ってください。
+
+#### reset_mzn_sem
+
+メザニンカード上のFPGAのSEMの状態をリセットします。SEUを修正た回数も0に戻ります。
+
+#### set_tdcmask
+
+メザニンカード上のFPGAへTDCマスクを設定する実行体です。
+例えば、16-31chと32-47achにマスクを設定したい場合以下のようになります。
+```shell
+set_tdcmask 192.168.10.10 both 0xffff0000 0xffff
+```
+
+#### show_mzn_laccp
+
+メザニンカード上のFPGAのLACCPのリンク状況と、自身の時刻オフセットを調べる機能です。
+
+`-- Link Up status --`はLACCPのリンクアップ状態を示すビット列です。
+ファームウェアによっては複数のLACCPが動いているので、全て1列に表示しています。
+ビット位置がポート番号に対応しており、ポート番号とボード上の位置は各ファームウェアの記述を参照してください。
+1でLACCPがリンクアップしている事を示します。
+
+`-- My Offset --`はそのファームウェアのセカンダリLACCPの情報を示します。つまり、受信ポートです。
+Heartbeat count offsetはMIKUMARIパルスの往復時間をシステムクロックのunit interval 精度で示しています。
+ファイバーが長くなると大きくなる数字です。
+Local fine offsetとLACCP fine offsetは1つ上流のモジュールと最上流のモジュールに対するクロック信号の位相差をそれそれ示しています。
+
+`Partner IP address`の項目では相手側のボードのIPアドレスををポート番号ごとに表示しています。
+
+#### show_mzn_mikumari
+
+メザニンカード上のFPGAのMIKUMARIリンクの状況を詳細に調べるための実行体です。何か問題がある時に使う事が多いと思います。
+
+`-- Link Up Status --`では物理層（CBT）、リンク層（MIKUMARI）、時刻同期層（LACCP）の接続状態を一覧できます。
+途中まではアップしているのに上位プロトコルがアップしていないときは、ファイバーの抜き差しなどをトライしてみるといいでしょう。

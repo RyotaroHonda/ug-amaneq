@@ -15,7 +15,7 @@ Mezzanine CDD-OPTは2スロット幅の大型メザニンカードです。16ch�
 ## Mini-mezzanine Clock-Receiver (CRV)
 
 - 製造: 有限会社ジー・エヌ・ディー
-- 型番: GN-2139-1
+- 型番: GN-2139-2
 
 Mini-mezzanine slot用の小型メザニンカードです。GN-2006-1にMIKUMARIポートを増設するために用います。GN-2006-4にはMIKUMARIポートがフロントパネルに存在しますが、CRVを取り付けて更にMIKUMARIポートを増やすことも可能です。
 1000BASE-SXかLX用の光ファイバーモジュールを使用してください。LANケーブル用のモジュールは使用できません。
