@@ -64,10 +64,10 @@ Str-LRTDCの機能とスケーラー機能についてはStr-LRTDCのページ�
 
 |LED #||Comment|
 |:----:|:----|:----|
-|1| PLL locked| 全ての内部クロック信号が正常に出力されている状態です。 |
-|2| Not in use| |
-|3| Frame status| ハートビートフレーム状態を示します。 |
-|4| DAQ is running| データ読み出し中である事を示します。 |
+|1| DAQ is running| データ読み出し中である事を示します。 |
+|2| Frame status| ハートビートフレーム状態を示します。 |
+|3| Not in use| |
+|4| PLL locked| 全ての内部クロック信号が正常に出力されている状態です。 |
 
 |DIP #||Comment|
 |:----:|:----|:----|

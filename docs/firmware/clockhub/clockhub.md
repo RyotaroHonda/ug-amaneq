@@ -8,7 +8,7 @@ Mikumari Clock Hub (MikuClockHub)は上流から時刻同期を受け、更に16
 ファームウェア内部に64chの1ns精度連続読み出しTDCも有しています。
 
 
-[Github repository](https://github.com/AMANEQ-official/MikuClockPrim)
+[Github repository](https://github.com/AMANEQ-official/MikuClockHub)
 
 ```
 - Unique ID:                  0xF100
