@@ -65,10 +65,11 @@ Str-LRTDCの機能とスケーラー機能についてはStr-LRTDCのページ�
 
 |LED #||Comment|
 |:----:|:----|:----|
-|1| PLL locked| 全ての内部クロック信号が正常に出力されている状態です。 |
-|2| MIKUMARI (16) link up| MIKUMARIポートの16番がリンクアップしている状態です。 |
-|3| Ready for DAQ| 時刻同期が完了し、DAQを走らせられる状態である事を示します。 |
-|4| DAQ is running| データ読み出し中である事を示します。 |
+|1| DAQ is running| データ読み出し中である事を示します。 |
+|2| Ready for DAQ| 時刻同期が完了し、DAQを走らせられる状態である事を示します。 |
+|3| MIKUMARI (16) link up| MIKUMARIポートの16番がリンクアップしている状態です。 |
+|4| PLL locked| 全ての内部クロック信号が正常に出力されている状態です。 |
+
 
 |DIP #||Comment|
 |:----:|:----|:----|
