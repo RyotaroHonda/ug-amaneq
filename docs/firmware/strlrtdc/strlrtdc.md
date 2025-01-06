@@ -9,7 +9,7 @@ Streaming low-resolution TDC (Str-LRTDC)は129ch入力の1ns精度連続読み�
 ```
 - Unique ID:                  0x60c4
 
-- Number of inputs:           128+1
+- Number of inputs:           128
 - Timing measurements:        Both edges
 - TDC precision:              1ns
 - Double hit resolution:      ~8ns
@@ -29,6 +29,7 @@ Streaming low-resolution TDC (Str-LRTDC)は129ch入力の1ns精度連続読み�
 |Version|Date|Changes|
 |:----:|:----|:----|
 |v2.5|2024.6.4|事実上の初期版|
+|v2.6|2025.1.6| - Updating LACCP (v2.1) supporting the frame flag distribution. <br> - Introducing gated scaler. <br> - Introducing IO manager block arranging input/output paths to the NIM IO. <br> - Deprecating the extra 129th TDC input from NIM. <br> - Deprecating DIP2 function.|
 
 ## Functions
 
@@ -36,8 +37,8 @@ Streaming low-resolution TDC (Str-LRTDC)は129ch入力の1ns精度連続読み�
 
 
 [図](#BL-DIAGRAM)はStr-LRTDCの簡易ブロックダイアグラムです。
-Main input, メザニンスロット, NIMIN-1を入力として利用し、最大129ch入力を受け付けます。
-AMANEQ本体のみで65ch入力が可能であり、129chまで拡張する場合はDCRv2メザニンカードが必要です。
+Main input, メザニンスロット, NIMIN-1を入力として利用し、最大128ch入力を受け付けます。
+AMANEQ本体のみで64ch入力が可能であり、128chまで拡張する場合はDCRv2メザニンカードが必要です。
 これらの入力信号は連続読み出しTDC (Str-TDC)ブロックとスケーラーブロックに接続されています。
 Str-TDCブロックでは1ns精度で信号のリーディングとトレーリングエッジのタイミングを測定し、内部で2つのエッジのペアリングを行いTOTを計算します。
 データ送信はSiTCPのTCP機能を使って行います。
@@ -74,7 +75,7 @@ MIKUMARIシステムを利用している場合、1-3番がすべて点灯して
 |DIP #||Comment|
 |:----:|:----|:----|
 |1| SiTCP IP setting | 0: デフォルトIPを使用します <br> 1: ユーザー設定のIPを使用します (要ライセンス)。|
-|2| NIMOUT setting | 0: NIMOUT-1からハートビート信号が出力されます<br>1: NIMOUT-1からLACCPがトリガー信号が出力されます|
+|2| Not in use | |
 |3| Standalone mode | 0: MIKUMARIシステムを使用します<br>1: ローカル発振器を使用しスタンドアロンモードになります|
 |4| Not in use | |
 
@@ -93,13 +94,14 @@ MIKUMARIシステムを利用している場合、1-3番がすべて点灯して
 
 ## Local bus modules
 
-Str-LRTDCには6個のローカルバスモジュールが存在します。
+Str-LRTDCには7個のローカルバスモジュールが存在します。
 以下がローカルバスアドレスのマップです。
 
 |Local Module|Address range|
 |:----|:----|
 |Mikumari Utility        |0x0000'0000 - 0x0FFF'0000|
 |Streaming TDC           |0x1000'0000 - 0x1FFF'0000|
+|IO Manager              |0x2000'0000 - 0x2FFF'0000|
 |Scaler                  |0x8000'0000 - 0x8FFF'0000|
 |CDCE62002 Controller    |0xB000'0000 - 0xBFFF'0000|
 |Self Diagnosis System   |0xC000'0000 - 0xCFFF'0000|
