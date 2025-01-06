@@ -114,7 +114,7 @@ CECE62002は多数の設定項目があるためこれらの読み書きのシ�
 
 
 
-### MIKUMARI Util (MUTIL)
+### MIKUMARI Util (MUTIL) (2025.01.06)
 
 |Register name|Address|Read/Write|Bit width|Comment|
 |:----|:----|:----:|:----:|:----|
@@ -131,6 +131,7 @@ CECE62002は多数の設定項目があるためこれらの読み書きのシ�
 |kAddrLaccpFineOffset|0x00A00000|R|16|LACCPが算出したLACCP fine offsetを取得します。（LACCPセカンダリ側のみ有効)|
 |kAddrHbfState|0x00B00000|W/R|1|ハートビートフレーム状態を設定します。1でDAQ running、0でDAQ idleです。そのクロック分配ネットワークのrootモジュールでのみ有効。|
 |kAddrRstOverMiku|0x00C00000|W|32|下流モジュールに対して[MIKUMARIリセット](#reset-signals)を発行する。1でリセット発行。|
+|kAddrClockRootMode|0x00D00000|R|1|Mikumari Clock Hub moduleでは、ROOTモードで起動している場合1を返します。TDCなどのleaf moduleではstandalone modeで起動している場合1を返します。|
 |kAddrRegIndex|0x01000000|W/R|6|いくつかのレジスタにおいて読み書きを行う対象のポート番号を指定します。|
 |kAddrNumLinks|0x02000000|R|6|そのファームウェアが備えているMIKUMARIリンクの数を取得します。|
 

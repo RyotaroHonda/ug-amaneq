@@ -10,6 +10,10 @@ The basic design is based on the hadron universal logic (HUL) module. About HUL,
 
 ## Update history
 
+**2025.1.6**
+
+* Updating descriptions for firmware, software, and synchronization
+
 **2024.11.28**
 
 * Correct the description for LED in firmware section
@@ -17,6 +21,4 @@ The basic design is based on the hadron universal logic (HUL) module. About HUL,
 **2024.6.4**
 
 * Descriptions for Hardware, synchronization, firmware, software, and practical usage
-
-
 
