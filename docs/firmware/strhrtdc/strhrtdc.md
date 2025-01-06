@@ -246,6 +246,10 @@ Str-LRTDCと同様です。
 
 ### Register address map
 
+**2025.01.06　追記**
+
+kHbdUserRegはメザニン側ではなく、AMANEQ側で設定するように変更されました。
+
 |Register name|Address|Read/Write|Bit width|Comment|
 |:----|:----|:----:|:----:|:----|
 |     |     |      | AMANEQ |    |
@@ -268,7 +272,7 @@ Str-LRTDCと同様です。
 |			    | | | | |
 |kHbfThrottCtrl    | 0x20C0     |   W/R|4|Set the heartbeat frame throttling condition. <br> 0x0: Disable (default) <br> 0x1: Only data for frame numbers that are multiples of 2 is acquired. <br> 0x2: Only data for frame numbers that are multiples of 4 is acquired. <br> 0x4: Only data for frame numbers that are multiples of 8 is acquired. <br> 0x8: Only data for frame numbers that are multiples of 16 is acquired.|
 |			    | | | | |
-|kHbdUserReg       | 0x20D0     |   W|16| The register value to be embedded to the 2nd delimiter word.|
+|<s>kHbdUserReg</s>       | <s>0x20D0</s>     |   <s>W</s>|<s>16</s>| <s>The register value to be embedded to the 2nd delimiter word.</s>|
 | | | | | |
 |kSelfRecoveryMode | 0x20E0     |   W/R|1| Enable the automatic recovery process for the local heartbeat frame mismatch (default: 0x0). |
 
@@ -375,12 +379,17 @@ DAQ Controllerはmezzanine card側のDDR transmitterとAMANEQ側のDDR receiver�
 
 ### Register address map
 
+**2025.01.06 追記**
+
+Heartbeat delimiterへのuser register設定はAMANEQ側のDAQ Controllerで設定する事になりました。
+
 |Register name|Address|Read/Write|Bit width|Comment|
 |:----|:----|:----:|:----:|:----|
 |  AMANEQ   |     |      |      | AMANEQ |
 |kAddrInitDDR   | 0x2020'0000|  W  |1| Assert DDR receiver initialize signal|
 |kAddrCtrlReg   | 0x2030'0000|  W/R|6| DDR receiver control register <br> 1st-bit: Enable test mode upper <br> 2nd-bit: Enable test mode lower <br> 3rd-bit: Enable upper slot <br> 4th-bit: Enable lower slot <br> 5th-bit: Force reset upper <br> 6th-bit: Force reset lower|
 |kAddrRcvStatus | 0x2040'0000|  R  |4| Receiver status <br> 1st-bit: Bit aligned upper <br> 2nd-bit: Bit aligned lower <br> 3rd-bit: BitError upper <br> 4th-bit: Bit error lower|
+|kHbdUserReg    | 0x2050     |  W  |16| The register value to be embedded to the 2nd delimiter word|
 |  Mezzanine   |     |      |      | Mezzanine |
 |kAddrCtrlReg   | 0x1000     |  W/R|1| Enable transmitter test mode |
 |kAddrExtraPath | 0x1010     |  W/R|1| Calibrate the LUT for tapped-delay line with the clock signal |
