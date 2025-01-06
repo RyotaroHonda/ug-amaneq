@@ -35,6 +35,7 @@ Mikumari Clock Root (MikuClockRoot)は17台の下流モジュールを同期す�
 |Version|Date|Changes|
 |:----:|:----|:----|
 |v2.5|2024.6.9|事実上の初期版|
+|v2.6|2025.1.6| - Updating LACCP (v2.1) supporting the frame flag distribution. <br> - Introducing gated scaler. <br> - Introducing IO manager block arranging input/output paths to the NIM IO.|
 
 ## Functions
 
@@ -78,13 +79,14 @@ Str-LRTDCの機能とスケーラー機能についてはStr-LRTDCのページ�
 
 ## Local bus modules
 
-Str-LRTDCには6個のローカルバスモジュールが存在します。
+Str-LRTDCには7個のローカルバスモジュールが存在します。
 以下がローカルバスアドレスのマップです。
 
 |Local Module|Address range|
 |:----|:----|
 |Mikumari Utility        |0x0000'0000 - 0x0FFF'0000|
 |Streaming TDC           |0x1000'0000 - 0x1FFF'0000|
+|IO Manager              |0x2000'0000 - 0x2FFF'0000|
 |Scaler                  |0x8000'0000 - 0x8FFF'0000|
 |CDCE62002 Controller    |0xB000'0000 - 0xBFFF'0000|
 |Self Diagnosis System   |0xC000'0000 - 0xCFFF'0000|
@@ -100,3 +102,42 @@ Str-LRTDCには6個のローカルバスモジュールが存在します。
 
 Str-LRTDCと同様のため、Str-LRTDCの説明を参照してください。
 レジスタアドレスも全く同じです。
+
+## IO Manager
+
+IO ManagerはAMANEQのNIM IOとFPGA内部の信号等の接続関係を管理するモジュールです。
+NIMポートから入力された信号をどの内部信号へ接続するか、また内部信号をどのNIMポートから出力するかをSiTCPを通じて変更します。
+
+|Register name|Address|Read/Write|Bit width|Comment|
+|:----|:----|:----:|:----:|:----|
+|kFrameFlag1In  | 0x20000000|  W/R|2| Setting the NIM-IN port to the internal frame flag-1 signal. (default 0x0)|
+|kFrameFlag2In  | 0x20100000|  W/R|2| Setting the NIM-IN port to the internal frame flag-2 signal. (default (0x1))|
+|kTriggerIn     | 0x20200000|  W/R|2| Setting the NIM-IN port to the internal trigger in signal. (default (0x3))|
+|kScrResetIn    | 0x20300000|  W/R|2| Setting the NIM-IN port to the internal scaler reset signal. This signal will be distributed to other modules through MIKUMARI. (default (0x3))|
+| |  |  | | |
+|kSelOutSig1    | 0x21000000|  W/R|3| Selecting the internal signal to output from the NIM-OUT port 1. |
+|kSelOutSig2    | 0x22000000|  W/R|3| Selecting the internal signal to output from the NIM-OUT port 2. |
+
+アドレス値が`0x20X0'0000`のレジスタはNIM-INポートをどの内部信号へ接続するかを決定します。
+各レジスタに対して設定可能な値は以下の通りです。
+
+|Register value|Comment|
+|:----:|:----|
+|0x0| Connecting the NIM-IN port 1 to the corresponding internal signal.|
+|0x1| Connecting the NIM-IN port 2 to the corresponding internal signal.|
+|0x2| Not in use |
+|0x3| Connecting GND to the corresponding internal signal. |
+
+アドレス値が`0x2X00'0000`のレジスタはどの内部信号をNIM-OUTポートへ接続するかを決定します。
+各レジスタに対して設定可能な値は以下の通りです。
+
+|Register value|Comment|
+|:----:|:----|
+|0x0| Connecting the heartbeat signal.|
+|0x1| Connecting the TCP connection establish.|
+|0x2| Connecting the logic of 1|
+|0x3| Connecting the logic of 1|
+|0x4| Connecting the logic of 1|
+|0x5| Connecting the logic of 1|
+|0x6| Connecting the logic of 1|
+|0x7| Connecting the logic of 1|

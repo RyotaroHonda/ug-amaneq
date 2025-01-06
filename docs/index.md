@@ -12,7 +12,7 @@ The basic design is based on the hadron universal logic (HUL) module. About HUL,
 
 **2025.1.6**
 
-* Descriptions for firmware
+* Updating descriptions for firmware, software, and synchronization
 
 **2024.11.28**
 

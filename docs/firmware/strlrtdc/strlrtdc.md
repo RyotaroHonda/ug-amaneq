@@ -2,7 +2,7 @@
 
 ## Overview
 
-Streaming low-resolution TDC (Str-LRTDC)は129ch入力の1ns精度連続読み出しTDCです。
+Streaming low-resolution TDC (Str-LRTDC)は128ch入力の1ns精度連続読み出しTDCです。
 
 [Github repository](https://github.com/AMANEQ-official/StrLrTdc)
 
@@ -37,7 +37,7 @@ Streaming low-resolution TDC (Str-LRTDC)は129ch入力の1ns精度連続読み�
 
 
 [図](#BL-DIAGRAM)はStr-LRTDCの簡易ブロックダイアグラムです。
-Main input, メザニンスロット, NIMIN-1を入力として利用し、最大128ch入力を受け付けます。
+Main inputとメザニンスロットを入力として利用し、最大128ch入力を受け付けます。
 AMANEQ本体のみで64ch入力が可能であり、128chまで拡張する場合はDCRv2メザニンカードが必要です。
 これらの入力信号は連続読み出しTDC (Str-TDC)ブロックとスケーラーブロックに接続されています。
 Str-TDCブロックでは1ns精度で信号のリーディングとトレーリングエッジのタイミングを測定し、内部で2つのエッジのペアリングを行いTOTを計算します。
@@ -60,7 +60,7 @@ MIKUMARIシステムを用いずにスタンドアロンで動作させるとき
 [図](#PORT-MAP)はTDC入力チャンネル番号とMIKUMARIのポート番号を示しています。
 MIKUMARIのポートはセカンダリが0番にアサインされています。
 
-### LED and DIP switch
+### LED and DIP switch (2025.01.06)
 
 MIKUMARIシステムを利用している場合、1-3番がすべて点灯していれば正常です。
 スタンドアロンの場合、1番と3番が点灯していれば正常です。
@@ -192,6 +192,15 @@ SPADI-Aで開発しているNestDAQの実装では、FEEからデータがない
 
 DIPスイッチの設定によりスタンドアロンモードで動いている場合は、フレームステートは常にONです。
 TCP接続状態だけでDAQ状態が決定されます。
+
+### Frame flags (2025.01.06)
+
+LACCPがハートビートフレーム単位で外部信号（レベル入力）をサンプリングして、その結果をheartbeat frame delimiterのフラグ領域に格納します。
+Frame flagsによってTDCが動作を変える事はありません。あくまで状態の記録としてデリミターワード中にフラグビットとして残ります。
+想定上の使用方法はゲート信号の記録です。
+また、frame flagsは後述のgated scaler駆動のためにも使用します。
+MIKUMARIで同期を受けている場合は上流モジュールから送られてきたフラグ情報が、standalone modeの場合はNIM入力からの信号入力の結果がframe flagsとして使用されます。
+Synchronizationの章も合わせて参照してください。
 
 ### Buffer overflow
 
@@ -388,6 +397,11 @@ Input throttling type-2はチャンネル毎に働くため、8-bit channelの�
 1st delimiter wordの16-bit flagsは該当ハートビートフレームにおけるDAQのステータスフラグを示します。
 以下に各ビットの意味をまとめます。
 
+**2025.01.06 追記**
+
+Frame flag 1/2はMikumari Clock Root moduleが送信した各フレームの状態フラグです。
+Standalone modeの場合自身のNIM入力からの信号入力の結果がここに格納されます。
+
 |Bit|Flag|Comment|
 |:----:|:----|:----|
 |16th bit|Reserve| |
@@ -404,8 +418,8 @@ Input throttling type-2はチャンネル毎に働くため、8-bit channelの�
 |5th bit|HBF throttling|This frame does not contain the TDC data because of the HBF throttling.|
 |4th bit|Reserve| |
 |3rd bit|Reserve| |
-|2nd bit|Reserve| |
-|1st bit|Reserve| |
+|2nd bit|Frame flag 2| Indicating the frame flag 2 condition in the current heartbeat frame.|
+|1st bit|Frame flag 1| Indicating the frame flag 1 condition in the current heartbeat frame.|
 
 16-bit LACCP fine offsetはLACCPが導出したfine offset値であり、16-bit符号付き整数です。
 LSBの時間精度は0.9765625 (1/1.024) psであり、Str-HRTDCのビット精度と同一です。
@@ -434,7 +448,6 @@ PCから情報をここへ書き込んでおくと、解析の時にデータベ
 |kTdcMaskMainD     | 0x1010'0000|   W/R|32|Channel mask for 32-63ch   (default: 0x0)|
 |kTdcMaskMznU      | 0x1020'0000|   W/R|32|Channel mask for 64-95ch   (default: 0x0)|
 |kTdcMaskMznD      | 0x1030'0000|   W/R|32|Channel mask for 96-127ch  (default: 0x0)|
-|kTdcMaskEx        | 0x10E0'0000|   W/R|32|Channel mask for 128-159ch (default: 0x0)|
 |	  		    | | | | |
 |kEnBypass         | 0x1040'0000|   W/R|3|Enable bypass for 2-us delay buffer and paring unit. (default: 0x0) <br> 1st-bit: Enable bypass for 2-us delay buffer <br> 2nd-bit: Enable bypass for paring unit <br> 3rd-bit: Disable the LACCP fine offset correction. If disabling it, non-zero value appears in the LACCP fine offset region in 1st delimiter word.|
 |	  		    | | | | |
@@ -482,6 +495,12 @@ RBCP経由でラッチリクエストを出すと、コマンドが届いたタ�
 FIFOから読み出しを行わずに再度ラッチリクエストを発行するとデータがクラッシュします。
 前回の読み出しが成功したか定かでないときはFIFOリセットを発行してからラッチリクエストを送ってください。
 
+### Gated scaler (2025.01.6)
+
+Frame flag bits 1/2の状態に依存して動作するgated scaler が2つ実装されました。
+それぞれflag bitが1の間だけカウントアップします。
+元々実装されていたscaler unitと合わせて合計3種類のスケーラーが存在しており、各スケーラーは独立に数を数えています。
+
 ### Data structure
 
 スケーラーデータワード長は32-bitです。
@@ -493,6 +512,15 @@ FIFOから読み出しを行わずに再度ラッチリクエストを発行す�
 - Channel-1 scaler value
 - Channel-2 scaler value
 - ...
+
+**2025.01.06 追記**
+
+**System informationは3種類のスケーラユニットで共有しています。**
+
+FPGAが返すデータブロックにはどのスケーラユニットのデータであるかを示すヘッダが存在しません。
+スケーラ読み出しはRBCPによってソフト的にトリガーされるので、読み出しを行ったソフトがどのユニットを読み出したのか知っているはずです。
+**どのユニットのデータであるかを明示したい場合はソフト的にヘッダを付与してください。**
+Software sectionで紹介する```read_scr```プログラムは先頭に64-bit分のソフトヘッダを付与します。
 
 **Contents of system information**
 
@@ -510,8 +538,8 @@ FIFOから読み出しを行わずに再度ラッチリクエストを発行す�
 |10th|Mikumari error number| The number of communication error happened in the MIKUMARI link|
 |11th|Trigger request| The number of trigger inputs|
 |12th|Trigger rejected| The number of rejected trigger inputs|
-|13th|Reserve| |
-|14th|Reserve| |
+|13th|Frame flag-1 time| Time while the frame flag 1 is on|
+|14th|Frame flag-2 time| Time while the frame flag 2 is on|
 |15th|Reserve| |
 |16th|Reserve| |
 |17th|Reserve| |
@@ -520,7 +548,7 @@ FIFOから読み出しを行わずに再度ラッチリクエストを発行す�
 先頭2ワードがラッチリクエスト到達時刻を示しています。
 この値を頼りにして差分を取り、レート計算を行ってください。
 
-Real time, daq run time, throttling timeにおける1-bitの時間単位は1 heartbeat periodです。
+Real time, daq run time, throttling time, frame flag timeにおける1-bitの時間単位は1 heartbeat periodです。
 積算時間が1 heartbeat長に満たない間はカウントは増えません。
 
 MIKUMARIの通信エラー数は電源投入からリンク確立前の間に多少増える事があります。
@@ -536,7 +564,9 @@ Str-LRTDCではこの欄は0です。
 |Register name|Address|Read/Write|Bit width|Comment|
 |:----|:----|:----:|:----:|:----|
 |kAddrScrReset  | 0x80000000|  W|1| Reset signals <br> 0x1: Local reset <br> 0x2: Global reset <br> 0x4: FIFO reset|
-|kAddrLatchCnt  | 0x80100000|  R|1| Send latch request|
+|kAddrLatchCnt0 | 0x80100000|  R|1| Send latch request to the free-run scaler unit|
+|kAddrLatchCnt1 | 0x80110000|  R|1| Send latch request to the gated scaler 1|
+|kAddrLatchCnt2 | 0x80120000|  R|1| Send latch request to the gated scaler 2|
 |kAddrNumCh     | 0x80200000|  R|8| Number of words of scaler data block including system information (unit: words)|
 |kAddrStatus    | 0x80300000|  R|8| Scaler unit status|
 |kAddrReadFIFO  | 0x81000000|  R|-| Address to read data from FIFO|
@@ -549,6 +579,7 @@ Str-LRTDCではこの欄は0です。
     - FIFO resetはアクセス先のFIFOの中身をリセットします。
 - LatchCnt
     - このアドレスへ読み出しアクセスをするとラッチリクエストになります。
+    - アドレスによってどのスケーラユニットへラッチリクエストを送信するか決まります。
 - NumCh
     - スケーラーデータブロックのワード数はファームウェアによって異なるので、何ワード読み出したらよいか知るためのレジスタです。読むべきワード数が得られます。
 - Status
@@ -556,3 +587,42 @@ Str-LRTDCではこの欄は0です。
     - others: Reserved
 - ReadFIFO
     - 1-byteずつデータをFIFOから読み出すためのアドレスです。
+    - 3種類のスケーラユニットでReadFIFOを共有しています。ラッチリクエストを送信したユニットのデータがFIFOには入っています。
+
+## IO Manager (2025.01.06)
+
+IO ManagerはAMANEQのNIM IOとFPGA内部の信号等の接続関係を管理するモジュールです。
+NIMポートから入力された信号をどの内部信号へ接続するか、また内部信号をどのNIMポートから出力するかをSiTCPを通じて変更します。
+
+|Register name|Address|Read/Write|Bit width|Comment|
+|:----|:----|:----:|:----:|:----|
+|kFrameFlag1In  | 0x20000000|  W/R|2| Setting the NIM-IN port to the internal frame flag-1 signal. It is valid when the module is the standalone mode. (default 0x0)|
+|kFrameFlag2In  | 0x20100000|  W/R|2| Setting the NIM-IN port to the internal frame flag-2 signal. It is valid when the module is the standalone mode. (default (0x1))|
+|kTriggerIn     | 0x20200000|  W/R|2| Setting the NIM-IN port to the internal trigger in signal. It is valid when the module is the standalone mode. (default (0x3))|
+| |  |  | | |
+|kSelOutSig1    | 0x21000000|  W/R|3| Selecting the internal signal to output from the NIM-OUT port 1. |
+|kSelOutSig2    | 0x22000000|  W/R|3| Selecting the internal signal to output from the NIM-OUT port 2. |
+
+アドレス値が`0x20X0'0000`のレジスタはNIM-INポートをどの内部信号へ接続するかを決定します。
+各レジスタに対して設定可能な値は以下の通りです。
+
+|Register value|Comment|
+|:----:|:----|
+|0x0| Connecting the NIM-IN port 1 to the corresponding internal signal.|
+|0x1| Connecting the NIM-IN port 2 to the corresponding internal signal.|
+|0x2| Not in use |
+|0x3| Connecting GND to the corresponding internal signal. |
+
+アドレス値が`0x2X00'0000`のレジスタはどの内部信号をNIM-OUTポートへ接続するかを決定します。
+各レジスタに対して設定可能な値は以下の通りです。
+
+|Register value|Comment|
+|:----:|:----|
+|0x0| Connecting the heartbeat signal.|
+|0x1| Connecting the TCP connection establish.|
+|0x2| Connecting the trigger signal from LACCP.|
+|0x3| Connecting the frame flag-1.|
+|0x4| Connecting the frame flag-2.|
+|0x5| Connecting the logic of 1|
+|0x6| Connecting the logic of 1|
+|0x7| Connecting the logic of 1|

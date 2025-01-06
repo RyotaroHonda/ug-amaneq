@@ -35,8 +35,10 @@ Streaming high-resolution TDC (Str-HRTDC)は20ps精度の連続読み出しTDC�
 |:----:|:----|:----|
 | AMANEQ |||
 |v2.4|2024.6.4|事実上の初期版|
+|v2.5|2025.1.6| - Updating LACCP (v2.1) supporting the frame flag distribution. <br> - Introducing gated scaler. |
 | Mezzanine |||
 |v2.4|2024.6.4|事実上の初期版|
+|v2.5|2025.1.6| - Updating LACCP (v2.1) supporting the frame flag distribution. <br> - Introducing gated scaler. <br> - Introducing IO manager block arranging input/output paths to the NIM IO. <br> - Deprecating DIP2 function. |
 
 ## Functions
 
@@ -71,7 +73,7 @@ Scaler機能についてもStr-LRTDCと同様ですが、システムインフ�
 [図](#PORT-MAP)はTDC入力チャンネル番号とMIKUMARIのポート番号を示しています。
 MIKUMARIのポートは、0番がupper mezzanine、1番がlower mezzanine、2番が受信用のポートにアサインされています。
 
-### LED and DIP switch
+### LED and DIP switch (2025.01.06)
 
 MIKUMARIシステムを利用している場合、1-3番がすべて点灯していれば正常です。
 スタンドアロンの場合、1番と3番が点灯していれば正常です。
@@ -94,7 +96,7 @@ Lower slotにだけメザニンカードを搭載すると動作しません。
 |1| SiTCP IP setting | 0: デフォルトIPを使用します <br> 1: ユーザー設定のIPを使用します (要ライセンス)。|
 |2| Standalone mode | 0: MIKUMARIシステムを使用します<br>1: ローカル発振器を使用しスタンドアロンモードになります|
 |3| Lower Mzn absent | 0: 2枚ともメザニンカードを搭載している場合 <br> 1: Upper mezzanine slowのみ使用している場合|
-|4| NIMOUT setting | 0: NIMOUT-1からハートビート信号が出力されます<br>1: NIMOUT-1からLACCPがトリガー信号が出力されます|
+|4| Not in use | |
 | Mezzanine |||
 |1| Not in use | |
 |2| Not in use | |
@@ -127,6 +129,7 @@ Str-LRTDC Baseには8個のローカルバスモジュールが存在します�
 |DAQ Controller          |0x2000'0000 - 0x2FFF'0000|
 |BusBridgePrimary upper  |0x3000'0000 - 0x3FFF'0000|
 |BusBridgePrimary lower  |0x4000'0000 - 0x4FFF'0000|
+|IO Manager              |0x5000'0000 - 0x5FFF'0000|
 |Scaler                  |0x8000'0000 - 0x8FFF'0000|
 |CDCE62002 Controller    |0xB000'0000 - 0xBFFF'0000|
 |Self Diagnosis System   |0xC000'0000 - 0xCFFF'0000|
@@ -313,7 +316,9 @@ Str-LRTDCと同様です。
 |     |     |      |      | Same as for Str-LRTDC |
 |     |     |      |      | Mezzanine |
 |kAddrScrReset  | 0x8000|  W|1| Reset signals <br> 0x1: Local reset <br> 0x2: Global reset <br> 0x4: FIFO reset|
-|kAddrLatchCnt  | 0x8010|  R|1| Send latch request|
+|kAddrLatchCnt0 | 0x8010|  R|1| Send latch request to the free-run scaler unit|
+|kAddrLatchCnt1 | 0x8011|  R|1| Send latch request to the gated scaler 1|
+|kAddrLatchCnt2 | 0x8012|  R|1| Send latch request to the gated scaler 2|
 |kAddrNumCh     | 0x8020|  R|8| Number of words of scaler data block including system information (unit: words)|
 |kAddrStatus    | 0x8030|  R|8| Scaler unit status|
 |kAddrReadFIFO  | 0x8100|  R|-| Address to read data from FIFO|
@@ -326,6 +331,7 @@ Str-LRTDCと同様です。
     - FIFO resetはアクセス先のFIFOの中身をリセットします。
 - LatchCnt
     - このアドレスへ読み出しアクセスをするとラッチリクエストになります。
+    - アドレスによってどのスケーラユニットへラッチリクエストを送信するか決まります。
 - NumCh
     - スケーラーデータブロックのワード数はファームウェアによって異なるので、何ワード読み出したらよいか知るためのレジスタです。読むべきワード数が得られます。
 - Status
@@ -333,6 +339,7 @@ Str-LRTDCと同様です。
     - others: Reserved
 - ReadFIFO
     - 1-byteずつデータをFIFOから読み出すためのアドレスです。
+    - - 3種類のスケーラユニットでReadFIFOを共有しています。ラッチリクエストを送信したユニットのデータがFIFOには入っています。
 
 ## Mikumari Utility
 
@@ -377,5 +384,44 @@ DAQ Controllerはmezzanine card側のDDR transmitterとAMANEQ側のDDR receiver�
 |  Mezzanine   |     |      |      | Mezzanine |
 |kAddrCtrlReg   | 0x1000     |  W/R|1| Enable transmitter test mode |
 |kAddrExtraPath | 0x1010     |  W/R|1| Calibrate the LUT for tapped-delay line with the clock signal |
+
+## IO Manager
+
+IO ManagerはAMANEQのNIM IOとFPGA内部の信号等の接続関係を管理するモジュールです。
+NIMポートから入力された信号をどの内部信号へ接続するか、また内部信号をどのNIMポートから出力するかをSiTCPを通じて変更します。
+
+|Register name|Address|Read/Write|Bit width|Comment|
+|:----|:----|:----:|:----:|:----|
+|kFrameFlag1In  | 0x50000000|  W/R|2| Setting the NIM-IN port to the internal frame flag-1 signal. It is valid when the module is the standalone mode. (default 0x0)|
+|kFrameFlag2In  | 0x50100000|  W/R|2| Setting the NIM-IN port to the internal frame flag-2 signal. It is valid when the module is the standalone mode. (default (0x1))|
+|kTriggerIn     | 0x50200000|  W/R|2| Setting the NIM-IN port to the internal trigger in signal. (default (0x3))|
+|kScrResetIn    | 0x50300000|  W/R|2| Setting the NIM-IN port to the internal scaler reset signal. This signal will be distributed to the mezzanine cards through MIKUMARI. (default (0x3))|
+| |  |  | | |
+|kSelOutSig1    | 0x21000000|  W/R|3| Selecting the internal signal to output from the NIM-OUT port 1. |
+|kSelOutSig2    | 0x22000000|  W/R|3| Selecting the internal signal to output from the NIM-OUT port 2. |
+
+アドレス値が`0x20X0'0000`のレジスタはNIM-INポートをどの内部信号へ接続するかを決定します。
+各レジスタに対して設定可能な値は以下の通りです。
+
+|Register value|Comment|
+|:----:|:----|
+|0x0| Connecting the NIM-IN port 1 to the corresponding internal signal.|
+|0x1| Connecting the NIM-IN port 2 to the corresponding internal signal.|
+|0x2| Not in use |
+|0x3| Connecting GND to the corresponding internal signal. |
+
+アドレス値が`0x2X00'0000`のレジスタはどの内部信号をNIM-OUTポートへ接続するかを決定します。
+各レジスタに対して設定可能な値は以下の通りです。
+
+|Register value|Comment|
+|:----:|:----|
+|0x0| Connecting the heartbeat signal.|
+|0x1| Connecting the TCP connection establish.|
+|0x2| Connecting the trigger signal from LACCP.|
+|0x3| Connecting the frame flag-1.|
+|0x4| Connecting the frame flag-2.|
+|0x5| Connecting the logic of 1|
+|0x6| Connecting the logic of 1|
+|0x7| Connecting the logic of 1|
 
 
