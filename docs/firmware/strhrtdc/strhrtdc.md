@@ -406,8 +406,8 @@ NIMポートから入力された信号をどの内部信号へ接続するか�
 |kTriggerIn     | 0x50200000|  W/R|2| Setting the NIM-IN port to the internal trigger in signal. (default (0x3))|
 |kScrResetIn    | 0x50300000|  W/R|2| Setting the NIM-IN port to the internal scaler reset signal. This signal will be distributed to the mezzanine cards through MIKUMARI. (default (0x3))|
 | |  |  | | |
-|kSelOutSig1    | 0x21000000|  W/R|3| Selecting the internal signal to output from the NIM-OUT port 1. |
-|kSelOutSig2    | 0x22000000|  W/R|3| Selecting the internal signal to output from the NIM-OUT port 2. |
+|kSelOutSig1    | 0x51000000|  W/R|3| Selecting the internal signal to output from the NIM-OUT port 1. |
+|kSelOutSig2    | 0x52000000|  W/R|3| Selecting the internal signal to output from the NIM-OUT port 2. |
 
 アドレス値が`0x20X0'0000`のレジスタはNIM-INポートをどの内部信号へ接続するかを決定します。
 各レジスタに対して設定可能な値は以下の通りです。
