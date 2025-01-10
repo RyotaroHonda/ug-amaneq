@@ -389,7 +389,7 @@ Heartbeat delimiterへのuser register設定はAMANEQ側のDAQ Controllerで設�
 |kAddrInitDDR   | 0x2020'0000|  W  |1| Assert DDR receiver initialize signal|
 |kAddrCtrlReg   | 0x2030'0000|  W/R|6| DDR receiver control register <br> 1st-bit: Enable test mode upper <br> 2nd-bit: Enable test mode lower <br> 3rd-bit: Enable upper slot <br> 4th-bit: Enable lower slot <br> 5th-bit: Force reset upper <br> 6th-bit: Force reset lower|
 |kAddrRcvStatus | 0x2040'0000|  R  |4| Receiver status <br> 1st-bit: Bit aligned upper <br> 2nd-bit: Bit aligned lower <br> 3rd-bit: BitError upper <br> 4th-bit: Bit error lower|
-|kHbdUserReg    | 0x2050     |  W  |16| The register value to be embedded to the 2nd delimiter word|
+|kHbdUserReg    | 0x2050'0000|  W  |16| The register value to be embedded to the 2nd delimiter word|
 |  Mezzanine   |     |      |      | Mezzanine |
 |kAddrCtrlReg   | 0x1000     |  W/R|1| Enable transmitter test mode |
 |kAddrExtraPath | 0x1010     |  W/R|1| Calibrate the LUT for tapped-delay line with the clock signal |
@@ -409,7 +409,7 @@ NIMポートから入力された信号をどの内部信号へ接続するか�
 |kSelOutSig1    | 0x51000000|  W/R|3| Selecting the internal signal to output from the NIM-OUT port 1. |
 |kSelOutSig2    | 0x52000000|  W/R|3| Selecting the internal signal to output from the NIM-OUT port 2. |
 
-アドレス値が`0x20X0'0000`のレジスタはNIM-INポートをどの内部信号へ接続するかを決定します。
+アドレス値が`0x50X0'0000`のレジスタはNIM-INポートをどの内部信号へ接続するかを決定します。
 各レジスタに対して設定可能な値は以下の通りです。
 
 |Register value|Comment|
@@ -419,7 +419,7 @@ NIMポートから入力された信号をどの内部信号へ接続するか�
 |0x2| Not in use |
 |0x3| Connecting GND to the corresponding internal signal. |
 
-アドレス値が`0x2X00'0000`のレジスタはどの内部信号をNIM-OUTポートへ接続するかを決定します。
+アドレス値が`0x5X00'0000`のレジスタはどの内部信号をNIM-OUTポートへ接続するかを決定します。
 各レジスタに対して設定可能な値は以下の通りです。
 
 |Register value|Comment|
