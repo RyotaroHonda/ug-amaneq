@@ -1,16 +1,5 @@
 # Release notes
 
-## Jun. 4, 2024
-
-### New
-
-- De facto release version
-    - Str-LRTDC v2.5
-    - Str-HRTDC Base v2.4
-    - Mezzanine Str-HRTDC v2.4
-    - Mikumari Clock Root v2.5
-    - Mikumari Clock Hub v2.5
-
 ## Jan. 6, 2025
 
 ### New + Improved
@@ -28,4 +17,15 @@
     - Mikumari Clock Hub v2.6
     - Mikumari Clock Root v2.6
     - The Mikumari Clock Root firmware will be deprecated in the next update because the Mikumari Clock Hub can do the same thing.
+
+## Jun. 4, 2024
+
+### New
+
+- De facto release version
+    - Str-LRTDC v2.5
+    - Str-HRTDC Base v2.4
+    - Mezzanine Str-HRTDC v2.4
+    - Mikumari Clock Root v2.5
+    - Mikumari Clock Hub v2.5
 
