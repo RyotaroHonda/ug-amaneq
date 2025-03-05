@@ -34,8 +34,9 @@ Mikumari Clock Hub (MikuClockHub)は上流から時刻同期を受け、更に16
 
 |Version|Date|Changes|
 |:----:|:----|:----|
-|v2.5|2024.6.9|事実上の初期版|
+|v2.7|2025.3.5| - Bugfix version of v2.6. <br> - Enabling the function to generate data words with input throttling type-2 start/end data types. |
 |v2.6|2025.1.6| - Updating LACCP (v2.1) supporting the frame flag distribution. <br> - Introducing gated scaler. <br> - Introducing IO manager block arranging input/output paths to the NIM IO. <br> - Deprecating the extra 129th TDC input from NIM. <br> - Deprecating DIP2 function. <br> - Changing what the LED lights indicate.|
+|v2.5|2024.6.9|事実上の初期版|
 
 
 # Functions
@@ -76,7 +77,7 @@ Str-LRTDCの機能とスケーラー機能についてはStr-LRTDCのページ�
 |:----:|:----|:----|
 |1| SiTCP IP setting | 0: デフォルトIPを使用します <br> 1: ユーザー設定のIPを使用します (要ライセンス)。|
 |2| Not in use | |
-|3| Not in use | |
+|3| Root mode | 0: Relay mode (clock-hub) <br> 1: Root mode (clock-root)|
 |4| Not in use | |
 
 ## Local bus modules

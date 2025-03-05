@@ -28,8 +28,10 @@ Streaming low-resolution TDC (Str-LRTDC)は128ch入力の1ns精度連続読み�
 
 |Version|Date|Changes|
 |:----:|:----|:----|
-|v2.5|2024.6.4|事実上の初期版|
+|v2.8|2025.3.5| - Bugfix version of v2.6. <br> - Enabling the function to generate data words with input throttling type-2 start/end data types. |
+|v2.7|        | Missing version |
 |v2.6|2025.1.6| - Updating LACCP (v2.1) supporting the frame flag distribution. <br> - Introducing gated scaler. <br> - Introducing IO manager block arranging input/output paths to the NIM IO. <br> - Deprecating the extra 129th TDC input from NIM. <br> - Deprecating DIP2 function.|
+|v2.5|2024.6.4|事実上の初期版|
 
 ## Functions
 
@@ -325,7 +327,8 @@ Heartbeat frame throttlingは3番目のケースに対応するための機能�
 Throttling機能はFPGA内で自己判断しTDCデータを破棄する非常に強力な機能です。
 どの機能がいつ働いたのか、どれだけの量のデータを破棄したか、なるべくデータからわかるように工夫してあります。
 まず、デリミタデータ内にどの機能が働いたかを示すフラグが存在します。ただし、これはハートビートフレームごとのサマリーであるため、細かい状況まではわからないです。
-Input throttling type-2はその機能が起動したときと終了した時に、開始と終了のタイムスタンプが入った特殊データを生成します。
+**Input throttling type-2はその機能が起動したときと終了した時に、開始と終了のタイムスタンプが入った特殊データを生成します。**
+**バグによりこの機能がv2.7以前では有効になっていませんでした。Version 2.8から特殊データを生成します。(2025.03.05 追記)**
 ここからいつどれだけinput throttling type-2が働いたかわかるようになっていますが、あまりよく検証されていません。
 ユーザーによる検証と追記を望みます。
 また、デリミタデータはODPブロックで生成されたデータの総量と、SiTCPから送信できたデータの総量の情報を有しています。
@@ -436,9 +439,14 @@ PCから情報をここへ書き込んでおくと、解析の時にデータベ
 
 20-bit generated data sizeはこのフレーム内でODPブロックが生成したデータ量を示します。
 この数値はdelimiter inserterで計算されており、各種スロットリング機能の影響を受ける前の生成データ量です。
+Paring modeがオンの場合、この数値はleading edge data wordのバイト数を示します。
+Paring modeがオフの場合、この数値はleading/trailing edge data wordの合計バイト数を示します。
+**Input throttling type-2はdelimiter inserterの後に実装されているため、input throttling type-2 start/end data wordsはこの数値に含まれません。**
+
 20-bit transferred data sizeはデータリンクまで到達したデータサイズです。
 もしFPGA内で一切のデータドロップが無い場合この値はgenerated data sizeに一致します。
 データドロップを起こす主な理由はスロットリング機能ですが、非常に入力レートが高い場合それ以外にもドロップを発生させる可能性があり、そのような場合16-bit flagsにthrottling bitが立っていなくてもtransferred data sizeのほうが小さくなることがあります。
+**この数値はFPGAが転送した全データのバイト数を示すため、input throttling type-2 start/end data wordsの含みます。そのため、特殊な状況ではtransferred data sizeのほうがgenerated data sizeを上回る事があり得ます。**
 
 ### Register address map
 
