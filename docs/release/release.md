@@ -1,5 +1,20 @@
 # Release notes
 
+## Mar. 5, 2025
+
+### New + Bugfix
+
+- Bugfix for previous version
+    - All firmware released on Jan. 6 have critical bugs.
+    - So far the function to insert throttling start/end words in the input throttling type-2 unit has not been working. Now that the feature is enabled, a word is generated with input throttling type-2 start/end data types to indicate that the throttling feature is working.
+- New firmware
+    - Str-LRTDC v2.8
+    - Str-HRTDC Base v2.7
+    - Mezzanine Str-HRTDC v2.7
+    - Mikumari Clock Hub v2.7
+    - Mikumari Clock Root v2.7
+        - The Mikumari Clock Root v2.7 will be the final version. It will not be updated any further.
+
 ## Jan. 6, 2025
 
 ### New + Improved

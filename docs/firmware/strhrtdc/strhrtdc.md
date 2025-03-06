@@ -34,11 +34,15 @@ Streaming high-resolution TDC (Str-HRTDC)は20ps精度の連続読み出しTDC�
 |Version|Date|Changes|
 |:----:|:----|:----|
 | AMANEQ |||
-|v2.4|2024.6.4|事実上の初期版|
+|v2.7|2025.3.5| - Bugfix version of v2.6.|
+|v2.6|        | Not working correctly with bug |
 |v2.5|2025.1.6| - Updating LACCP (v2.1) supporting the frame flag distribution. <br> - Introducing gated scaler. |
-| Mezzanine |||
 |v2.4|2024.6.4|事実上の初期版|
+| Mezzanine |||
+|v2.7|2025.3.5| - Bugfix version of v2.6. <br> - Enabling the function to generate data words with input throttling type-2 start/end data types. <br> - Fixed a bug that caused the same data to be duplicated in rare cases when a narrow pulse was entered. |
+|v2.6|        | Not working correctly with bug |
 |v2.5|2025.1.6| - Updating LACCP (v2.1) supporting the frame flag distribution. <br> - Introducing gated scaler. <br> - Introducing IO manager block arranging input/output paths to the NIM IO. <br> - Deprecating DIP2 function. |
+|v2.4|2024.6.4|事実上の初期版|
 
 ## Functions
 
