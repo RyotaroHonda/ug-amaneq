@@ -3,6 +3,11 @@
 AMANEQ is a general-purpose logic module developed as the main electronics for a streaming readout DAQ system.
 The basic design is based on the hadron universal logic (HUL) module. About HUL, see [Open-It webpage](https://openit.kek.jp/project/HUL/HUL).
 
+References
+- R. Honda, IEEE TNS, vol. 70, no. 6, pp.1102–1109, Apr. 2023, doi: 10.1109/TNS.2023.3265698.
+- R. Honda, M. Ikeno, C.S. Lin, M. Shoji, IEEE TNS, vol 72, no. 3, 614-622, Mar. 2025, doi: 10.1109/TNS.2025.3541731
+
+
 ## Links
 
 - [Open-It project](https://openit.kek.jp/project/StrHRTDC/StrHRTDC)
