@@ -1,5 +1,12 @@
 # Release notes
 
+## Mar. 31, 2025
+
+### Update
+
+- Update the product number of CDD-OPT mezzanine card.
+    - CDD-OPT v3 (GN-2436-1) is the latest.
+
 ## Mar. 5, 2025
 
 ### New + Bugfix
@@ -43,4 +50,3 @@
     - Mezzanine Str-HRTDC v2.4
     - Mikumari Clock Root v2.5
     - Mikumari Clock Hub v2.5
-

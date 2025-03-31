@@ -8,6 +8,9 @@ Mikumari Clock Root (MikuClockRoot)は17台の下流モジュールを同期す�
 論文でも同様にroot-moduleの表記を取っています。
 ファームウェア内部に64chの1ns精度連続読み出しTDCも有しています。
 
+このファームウェアの開発はversion 2.7をもってターミネートします。
+クロック分配ネットワークの頂点にはroot-modeで起動したMikumari Clock Hubモジュールを配置してください。
+
 [Github repository](https://github.com/AMANEQ-official/MikuClockPrim)
 
 ```
