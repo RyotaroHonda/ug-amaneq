@@ -3,10 +3,10 @@
 ## Overview
 
 Mikumari Clock Hub (MikuClockHub)は上流から時刻同期を受け、更に16台の下流モジュールを同期する事が出来る、クロック分配ネットワーク上のリレーモジュールです。
-スタンドアロンモードを有しており、上流から自身を切り離して新しいROOTモジュールとして動作することが出来ます。
+Root-modeを有しており、上流から自身を切り離して新しいROOTモジュールとして動作することが出来ます。
+Mikumari Clock Root firmwareの開発が中断することから、version 2.7以降ではroot-modeで起動した本モジュールをクロック分配ネットワークの頂点に置くことを推奨します。
 単にClockHubと表記する事もあります。
 ファームウェア内部に64chの1ns精度連続読み出しTDCも有しています。
-
 
 [Github repository](https://github.com/AMANEQ-official/MikuClockHub)
 
@@ -37,7 +37,6 @@ Mikumari Clock Hub (MikuClockHub)は上流から時刻同期を受け、更に16
 |v2.7|2025.3.5| - Bugfix version of v2.6. <br> - Enabling the function to generate data words with input throttling type-2 start/end data types. |
 |v2.6|2025.1.6| - Updating LACCP (v2.1) supporting the frame flag distribution. <br> - Introducing gated scaler. <br> - Introducing IO manager block arranging input/output paths to the NIM IO. <br> - Deprecating the extra 129th TDC input from NIM. <br> - Deprecating DIP2 function. <br> - Changing what the LED lights indicate.|
 |v2.5|2024.6.9|事実上の初期版|
-
 
 # Functions
 
@@ -105,7 +104,6 @@ Str-LRTDCには6個のローカルバスモジュールが存在します。
 
 Str-LRTDCと同様のため、Str-LRTDCの説明を参照してください。
 レジスタアドレスも全く同じです。
-
 
 ## IO Manager
 
