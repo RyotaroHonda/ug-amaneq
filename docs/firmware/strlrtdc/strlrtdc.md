@@ -37,7 +37,6 @@ Streaming low-resolution TDC (Str-LRTDC)は128ch入力の1ns精度連続読み�
 
 ![BL-DIAGRAM](block-diagram.png "Simplified block diagram of Str-LRTDC."){: #BL-DIAGRAM width="80%"}
 
-
 [図](#BL-DIAGRAM)はStr-LRTDCの簡易ブロックダイアグラムです。
 Main inputとメザニンスロットを入力として利用し、最大128ch入力を受け付けます。
 AMANEQ本体のみで64ch入力が可能であり、128chまで拡張する場合はDCRv2メザニンカードが必要です。
@@ -73,7 +72,6 @@ MIKUMARIシステムを利用している場合、1-3番がすべて点灯して
 |2| Ready for DAQ| 時刻同期が完了し、DAQを走らせられる状態である事を示します。 |
 |3| MIKUMARI (0) link up| MIKUMARIポートの0番がリンクアップしている状態です。 |
 |4| PLL locked| 全ての内部クロック信号が正常に出力されている状態です。 |
-
 
 |DIP #||Comment|
 |:----:|:----|:----|
@@ -309,8 +307,6 @@ Input throttling type-2が働いている間このユニットはデリミタデ
 この機能は一度起動すると該当incoming FIFOがemptyになるまで働き続けます。
 Input throttling type-1は概念だけが定義されていて未実装ですが、入力データレートが急激に増えると起動しODPブロックの2us 遅延バッファの後でデータを消去する機能です。
 Type-2のように一度メモリに書いてしまったデータが排出されるまで待つ必要が無いので高効率ではありますが、瞬間的にレートが上がったことの判断が難しいため現在は未実装です。
-
-
 
 Output throttlingはバックプレッシャーからStreaming TDCを守る機能です。
 SiTCP直前のバッファ (link buffer) のprogrammable full flagが立っているときにinput throttling type-2が働くとこの機能が起動します。
@@ -609,9 +605,9 @@ NIMポートから入力された信号をどの内部信号へ接続するか�
 |kTriggerIn     | 0x20200000|  W/R|2| Setting the NIM-IN port to the internal trigger in signal. It is valid when the module is the standalone mode. (default (0x3))|
 | |  |  | | |
 |kSelOutSig1    | 0x21000000|  W/R|3| Selecting the internal signal to output from the NIM-OUT port 1. |
-|kSelOutSig2    | 0x22000000|  W/R|3| Selecting the internal signal to output from the NIM-OUT port 2. |
+|kSelOutSig2    | 0x21100000|  W/R|3| Selecting the internal signal to output from the NIM-OUT port 2. |
 
-アドレス値が`0x20X0'0000`のレジスタはNIM-INポートをどの内部信号へ接続するかを決定します。
+アドレス値が`0x21X0'0000`のレジスタはNIM-INポートをどの内部信号へ接続するかを決定します。
 各レジスタに対して設定可能な値は以下の通りです。
 
 |Register value|Comment|
