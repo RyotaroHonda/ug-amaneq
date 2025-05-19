@@ -120,9 +120,9 @@ NIMポートから入力された信号をどの内部信号へ接続するか�
 |kScrResetIn    | 0x20300000|  W/R|2| Setting the NIM-IN port to the internal scaler reset signal. This signal will be distributed to other modules through MIKUMARI. (default (0x3))|
 | |  |  | | |
 |kSelOutSig1    | 0x21000000|  W/R|3| Selecting the internal signal to output from the NIM-OUT port 1. |
-|kSelOutSig2    | 0x22000000|  W/R|3| Selecting the internal signal to output from the NIM-OUT port 2. |
+|kSelOutSig2    | 0x21100000|  W/R|3| Selecting the internal signal to output from the NIM-OUT port 2. |
 
-アドレス値が`0x20X0'0000`のレジスタはNIM-INポートをどの内部信号へ接続するかを決定します。
+アドレス値が`0x21X0'0000`のレジスタはNIM-INポートをどの内部信号へ接続するかを決定します。
 各レジスタに対して設定可能な値は以下の通りです。
 
 |Register value|Comment|
