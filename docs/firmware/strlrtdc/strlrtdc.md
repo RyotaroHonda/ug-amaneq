@@ -231,7 +231,7 @@ Online Data Processing (ODP) blockは時間測定やTOTの計算など各チャ�
 もし、後述のペアリングモードをOFFにして立下りエッジデータを残すような処理をしていた場合でも、両エッジデータが同時にやってくるような短パルスに対しては立下りエッジのデータを残すことができません。
 
 その後データは2usの固定長ディレイバッファを通過します。
-この遅延バッファは、後述の[trigger emulation mode](#trigger-emulation-mode)においてトリガー入力を待つための機能です。
+この遅延バッファは、後述の[trigger assisted mode](#trigger-assisted-mode)においてトリガー入力を待つための機能です。
 
 Delimiter inserterの直前で16-bit fine-scale timestampが結合され、ハートビートフレーム内における時刻が確定します。
 ハートビートのタイミングでdelimiter wordが挿入されて、各チャンネルにおけるハートビートフレームが構成されます。
@@ -251,7 +251,7 @@ TOTフィルターではTOT値に対して下限と上限の閾値を設定し�
 TOTの下限値を設定した場合TOTが0のデータは本来フィルターアウトされてしまいますが、TOTが0のデータは特殊なケースに相当するので、これを特例的に通過させるモードも実装されています。
 デフォルトではTOTフィルターはオフになっており、すべてのデータを通過させます。
 
-#### Trigger emulation mode
+#### Trigger assisted mode
 
 Streaming TDCはトリガーレスモードが基本ではありますが、データ量削減のためにハードウェアトリガーの入力を受け付けることができます。
 トリガーはNIM入力か、MIKUMARI経由で上流のモジュールから受け取ることが可能です。
@@ -460,9 +460,9 @@ Paring modeがオフの場合、この数値はleading/trailing edge data word�
 |kTotMinTh         | 0x1060'0000|   W/R|16|TOT filter low threshold|
 |kTotMaxTh         | 0x1070'0000|   W/R|16|TOT filter high threshold|
 |	  		    | | | | |
-|kTrgEmuCtrl       | 0x1080'0000|   W/R|2|Set trigger emulation mode. (default: 0x0) <br> 1st-bit: Enable trigger gate mode <br> 2nd-bit: Enable Veto gate mode|
-|kTrgEmuDelay      | 0x1090'0000|   W/R|8|Set the delay from the trigger (veto) input to opening the trigger (veto) gate. LSB precision is 8ns.|
-|kTrgEmuWidth      | 0x10A0'0000|   W/R|16|Set the trigger (veto) gate width. LSB precision is 8ns.|
+|kTrgAssistCtrl       | 0x1080'0000|   W/R|2|Set trigger assisted mode. (default: 0x0) <br> 1st-bit: Enable trigger gate mode <br> 2nd-bit: Enable Veto gate mode|
+|kTrgAssistDelay      | 0x1090'0000|   W/R|8|Set the delay from the trigger (veto) input to opening the trigger (veto) gate. LSB precision is 8ns.|
+|kTrgAssistWidth      | 0x10A0'0000|   W/R|16|Set the trigger (veto) gate width. LSB precision is 8ns.|
 |			    | | | | |
 |kHbfThrottCtrl    | 0x10B0'0000|   W/R|4|Set the heartbeat frame throttling condition. <br> 0x0: Disable (default) <br> 0x1: Only data for frame numbers that are multiples of 2 is acquired. <br> 0x2: Only data for frame numbers that are multiples of 4 is acquired. <br> 0x4: Only data for frame numbers that are multiples of 8 is acquired. <br> 0x8: Only data for frame numbers that are multiples of 16 is acquired.|
 |			    | | | | |
@@ -482,9 +482,9 @@ Paring modeがオフの場合、この数値はleading/trailing edge data word�
 - TotFilter
     - Zero-TOT through modeではたとえ下限値が設定されていたとしてもTOTが0のデータを例外的に通過させます。
     - 閾値設定のLSB精度はTDCと同じ1nsです。
-- TrgEmu
+- TrgAssist
     - Trigger modeではトリガー入力によりデータを通過させるためのゲートを開きます。Veto modeではベト入力によりデータをブロックするゲートを開きます。
-    - kTrgEmuCtrlには0x3を設定できません。
+    - kTrgAssistCtrlには0x3を設定できません。
 - SelfRecoveryMode
     - Local heartbeat frame number mismatch (delimiter flag 10th bit)が発生した時に自動復帰するプロセスを有効にします。
     - このモードが有効の時local heartbeat frame mismatchが起きると、自動的にDAQ状態をOFFしてデータ送信を止め、データマージングブロックをリセットしてからDAQ状態をONしデータ送信を再開します。
