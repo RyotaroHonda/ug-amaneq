@@ -272,9 +272,9 @@ kHbdUserRegはメザニン側ではなく、AMANEQ側で設定するように変
 |kTotMinTh         | 0x2070     |   W/R|22|TOT filter low threshold|
 |kTotMaxTh         | 0x2080     |   W/R|22|TOT filter high threshold|
 |	  		    | | | | |
-|kTrgEmuCtrl       | 0x2090     |   W/R|2|Set trigger emulation mode. (default: 0x0) <br> 1st-bit: Enable trigger gate mode <br> 2nd-bit: Enable Veto gate mode|
-|kTrgEmuDelay      | 0x20A0     |   W/R|8|Set the delay from the trigger (veto) input to opening the trigger (veto) gate. LSB precision is 8ns.|
-|kTrgEmuWidth      | 0x20B0     |   W/R|16|Set the trigger (veto) gate width. LSB precision is 8ns.|
+|kTrgAssistCtrl       | 0x2090     |   W/R|2|Set trigger assisted mode. (default: 0x0) <br> 1st-bit: Enable trigger gate mode <br> 2nd-bit: Enable Veto gate mode|
+|kTrgAssistDelay      | 0x20A0     |   W/R|8|Set the delay from the trigger (veto) input to opening the trigger (veto) gate. LSB precision is 8ns.|
+|kTrgAssistWidth      | 0x20B0     |   W/R|16|Set the trigger (veto) gate width. LSB precision is 8ns.|
 |			    | | | | |
 |kHbfThrottCtrl    | 0x20C0     |   W/R|4|Set the heartbeat frame throttling condition. <br> 0x0: Disable (default) <br> 0x1: Only data for frame numbers that are multiples of 2 is acquired. <br> 0x2: Only data for frame numbers that are multiples of 4 is acquired. <br> 0x4: Only data for frame numbers that are multiples of 8 is acquired. <br> 0x8: Only data for frame numbers that are multiples of 16 is acquired.|
 |			    | | | | |
@@ -301,9 +301,9 @@ kHbdUserRegはメザニン側ではなく、AMANEQ側で設定するように変
 - TotFilter
     - Zero-TOT through modeではたとえ下限値が設定されていたとしてもTOTが0のデータを例外的に通過させます。
     - 閾値設定のLSB精度はTDCと同じ~0.98psです。
-- TrgEmu
+- TrgAssist
     - Trigger modeではトリガー入力によりデータを通過させるためのゲートを開きます。Veto modeではベト入力によりデータをブロックするゲートを開きます。
-    - kTrgEmuCtrlには0x3を設定できません。
+    - kTrgAssistCtrlには0x3を設定できません。
 - SelfRecoveryMode
     - Local heartbeat frame number mismatch (delimiter flag 10th bit)が発生した時に自動復帰するプロセスを有効にします。
     - このモードが有効の時local heartbeat frame mismatchが起きると、自動的にDAQ状態をOFFしてデータ送信を止め、データマージングブロックをリセットしてからDAQ状態をONしデータ送信を再開します。
