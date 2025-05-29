@@ -10,8 +10,10 @@ SiTCPは複数のプログラムから独立にRBCP通信を行う事を想定�
 ## Cooling
 
 **全く無風状態で使い続けると恐らくFPGAはダメになります。**
-空冷を心掛けてください。貼り付けるタイプのヒートシンクがあるだけでもかなり違うと思うので、事例を報告してください。
+空冷を心掛けてください。
+貼り付けるタイプのヒートシンクの例です。多少FPGA温度が改善する報告があります。
 
+- [TGH-0200-02](https://www.digikey.ca/en/products/detail/t-global-technology/TGH-0200-02/13682129) (By TRIUMF 小嶋さん)
 
 ## Generation of MCS and download it by Vivado
 
@@ -85,6 +87,16 @@ Streaming TDCのself recovery modeはONにしておくのがおすすめです�
 Local heartbeat frame mismatchが起きた場合、そのFEEから返ってくるデータは最早全く正しくないです。
 DAQソフトウェアがデリミターフラグを見て適切に対処するように作られていれば良いですが、多くの場合でそのようにはなっていないと思います。
 Self recoveryが働けば、DAQを止めずにFEEが復帰してくれます。これを良しとするかどうかはユーザーの判断にゆだねますが。
+
+## NIM output signals
+
+2025年5月に行ったファームウェアの更新によって、NIM outputからシステムクロック (125 MHz)を16分周した7.8125 MHzのクロック信号が出力できるようになりました。
+IO managerによって選択可能な信号については、各ファームウェアの記述を参照してください。
+この信号を```clk_div16```とします。
+```clk_div16```は外部システムと同期を取るために使うことを想定しており、heartbeat signalとは[図](#CLKDIV16)の位相関係にあります。
+NIM outputからこれらの信号を出力し、外部システムのスケーラやTDCで測定することで、異なった時刻ドメインを持つシステムの接続することが出来るようになるでしょう。
+
+![CLKDIV16](clkdiv16.png "Phase relation between the heartbeat signal and clk_div16."){: #CLKDIV16 width="70%"}
 
 ## ジー・エヌ・ディーへの問い合わせ
 

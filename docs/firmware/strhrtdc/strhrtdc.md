@@ -34,11 +34,13 @@ Streaming high-resolution TDC (Str-HRTDC)は20ps精度の連続読み出しTDC�
 |Version|Date|Changes|
 |:----:|:----|:----|
 | AMANEQ |||
+|v2.8|2025.5.28| - Bugfix version of v2.7.  <br> - A clock signal of 7.8125 MHz, divided by 16 from the system clock, can now be output from the NIM output port.|
 |v2.7|2025.3.5| - Bugfix version of v2.6.|
 |v2.6|        | Not working correctly with bug |
 |v2.5|2025.1.6| - Updating LACCP (v2.1) supporting the frame flag distribution. <br> - Introducing gated scaler. |
 |v2.4|2024.6.4|事実上の初期版|
 | Mezzanine |||
+|v2.8|2025.5.28| - Bugfix version of v2.7. <br> - Fixed the bug that the delay function for the trigger assisted mode does not work. |
 |v2.7|2025.3.5| - Bugfix version of v2.6. <br> - Enabling the function to generate data words with input throttling type-2 start/end data types. <br> - Fixed a bug that caused the same data to be duplicated in rare cases when a narrow pulse was entered. |
 |v2.6|        | Not working correctly with bug |
 |v2.5|2025.1.6| - Updating LACCP (v2.1) supporting the frame flag distribution. <br> - Introducing gated scaler. <br> - Introducing IO manager block arranging input/output paths to the NIM IO. <br> - Deprecating DIP2 function. |
@@ -413,7 +415,7 @@ NIMポートから入力された信号をどの内部信号へ接続するか�
 |kSelOutSig1    | 0x51000000|  W/R|3| Selecting the internal signal to output from the NIM-OUT port 1. |
 |kSelOutSig2    | 0x51100000|  W/R|3| Selecting the internal signal to output from the NIM-OUT port 2. |
 
-アドレス値が`0x51X0'0000`のレジスタはNIM-INポートをどの内部信号へ接続するかを決定します。
+アドレス値が`0x50X0'0000`のレジスタはNIM-INポートをどの内部信号へ接続するかを決定します。
 各レジスタに対して設定可能な値は以下の通りです。
 
 |Register value|Comment|
@@ -423,7 +425,7 @@ NIMポートから入力された信号をどの内部信号へ接続するか�
 |0x2| Not in use |
 |0x3| Connecting GND to the corresponding internal signal. |
 
-アドレス値が`0x5X00'0000`のレジスタはどの内部信号をNIM-OUTポートへ接続するかを決定します。
+アドレス値が`0x51X0'0000`のレジスタはどの内部信号をNIM-OUTポートへ接続するかを決定します。
 各レジスタに対して設定可能な値は以下の通りです。
 
 |Register value|Comment|
@@ -433,6 +435,6 @@ NIMポートから入力された信号をどの内部信号へ接続するか�
 |0x2| Connecting the trigger signal from LACCP.|
 |0x3| Connecting the frame flag-1.|
 |0x4| Connecting the frame flag-2.|
-|0x5| Connecting the logic of 1|
+|0x5| Connecting the div16 clock (7.8125 MHz)|
 |0x6| Connecting the logic of 1|
 |0x7| Connecting the logic of 1|
