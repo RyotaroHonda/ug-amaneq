@@ -15,6 +15,11 @@ References
 
 ## Update history
 
+**2025.5.29**
+
+- Updating descriptions for firmware and practical usage.
+- Release StrLrTdc-10G
+
 **2025.1.6**
 
 - Updating descriptions for firmware, software, and synchronization

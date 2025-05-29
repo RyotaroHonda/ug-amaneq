@@ -34,6 +34,7 @@ Streaming high-resolution TDC (Str-HRTDC)は20ps精度の連続読み出しTDC�
 |Version|Date|Changes|
 |:----:|:----|:----|
 | AMANEQ |||
+|v2.8|2025.5.28| - Bugfix version of v2.7. <br> - Fixed the bug that the delay function for the trigger assisted mode does not work. |
 |v2.7|2025.3.5| - Bugfix version of v2.6.|
 |v2.6|        | Not working correctly with bug |
 |v2.5|2025.1.6| - Updating LACCP (v2.1) supporting the frame flag distribution. <br> - Introducing gated scaler. |
@@ -88,7 +89,6 @@ MIKUMARIシステムを利用している場合、1-3番がすべて点灯して
 |2| Ready for DAQ| 時刻同期が完了し、DAQを走らせられる状態である事を示します。 |
 |3| MIKUMARI (2) link up| MIKUMARIポートの2番がリンクアップしている状態です。 |
 |4| PLL locked| 全ての内部クロック信号が正常に出力されている状態です。 |
-
 
 Str-HRTDC Baseは2枚ともメザニンカードを搭載しているケースと、upper slotにだけメザニンカードを搭載しているケースをサポートしています。
 Lower slotにだけメザニンカードを搭載すると動作しません。
@@ -211,6 +211,7 @@ AMANEQ上のFPGAは2つの独立したモジュールのデータをまとめて
 AMANEQ側のFPGAには設定できるstreaming TDCの機能は存在しません。
 
 ### Data structure
+
 #### TDC data category
 
 ```
@@ -347,7 +348,7 @@ kHbdUserRegはメザニン側ではなく、AMANEQ側で設定するように変
     - others: Reserved
 - ReadFIFO
     - 1-byteずつデータをFIFOから読み出すためのアドレスです。
-    - - 3種類のスケーラユニットでReadFIFOを共有しています。ラッチリクエストを送信したユニットのデータがFIFOには入っています。
+          - - 3種類のスケーラユニットでReadFIFOを共有しています。ラッチリクエストを送信したユニットのデータがFIFOには入っています。
 
 ## Mikumari Utility
 
@@ -411,7 +412,7 @@ NIMポートから入力された信号をどの内部信号へ接続するか�
 |kScrResetIn    | 0x50300000|  W/R|2| Setting the NIM-IN port to the internal scaler reset signal. This signal will be distributed to the mezzanine cards through MIKUMARI. (default (0x3))|
 | |  |  | | |
 |kSelOutSig1    | 0x51000000|  W/R|3| Selecting the internal signal to output from the NIM-OUT port 1. |
-|kSelOutSig2    | 0x52000000|  W/R|3| Selecting the internal signal to output from the NIM-OUT port 2. |
+|kSelOutSig2    | 0x51100000|  W/R|3| Selecting the internal signal to output from the NIM-OUT port 2. |
 
 アドレス値が`0x50X0'0000`のレジスタはNIM-INポートをどの内部信号へ接続するかを決定します。
 各レジスタに対して設定可能な値は以下の通りです。
@@ -423,7 +424,7 @@ NIMポートから入力された信号をどの内部信号へ接続するか�
 |0x2| Not in use |
 |0x3| Connecting GND to the corresponding internal signal. |
 
-アドレス値が`0x5X00'0000`のレジスタはどの内部信号をNIM-OUTポートへ接続するかを決定します。
+アドレス値が`0x51X0'0000`のレジスタはどの内部信号をNIM-OUTポートへ接続するかを決定します。
 各レジスタに対して設定可能な値は以下の通りです。
 
 |Register value|Comment|
@@ -433,8 +434,6 @@ NIMポートから入力された信号をどの内部信号へ接続するか�
 |0x2| Connecting the trigger signal from LACCP.|
 |0x3| Connecting the frame flag-1.|
 |0x4| Connecting the frame flag-2.|
-|0x5| Connecting the logic of 1|
+|0x5| Connecting the div16 clock (7.8125 MHz)|
 |0x6| Connecting the logic of 1|
 |0x7| Connecting the logic of 1|
-
-
