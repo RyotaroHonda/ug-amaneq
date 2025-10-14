@@ -34,6 +34,7 @@ Mikumari Clock Root firmwareの開発が中断することから、version 2.7�
 
 |Version|Date|Changes|
 |:----:|:----|:----|
+|v2.9|2025.10.14| - Fixed the bit position of the frameFlag1/2 swapped in the heartbeat delimiter flags. <br> - 125 MHz system clock signal can be output from NIM-OUT ports by selecting it via IOM. |
 |v2.8|2025.5.28| - Bugfix version of v2.7. <br> - Fixed the bug that the delay function for the trigger assisted mode does not work. <br> - A clock signal of 7.8125 MHz, divided by 16 from the system clock, can now be output from the NIM output port.|
 |v2.7|2025.3.5| - Bugfix version of v2.6. <br> - Enabling the function to generate data words with input throttling type-2 start/end data types. |
 |v2.6|2025.1.6| - Updating LACCP (v2.1) supporting the frame flag distribution. <br> - Introducing gated scaler. <br> - Introducing IO manager block arranging input/output paths to the NIM IO. <br> - Deprecating the extra 129th TDC input from NIM. <br> - Deprecating DIP2 function. <br> - Changing what the LED lights indicate.|
@@ -142,5 +143,5 @@ NIMポートから入力された信号をどの内部信号へ接続するか�
 |0x3| Connecting the frame flag-1.|
 |0x4| Connecting the frame flag-2.|
 |0x5| Connecting the div16 clock (7.8125 MHz).|
-|0x6| Connecting the logic of 1|
+|0x6| Connecting the system clock signal (125 MHz). |
 |0x7| Connecting the logic of 1|

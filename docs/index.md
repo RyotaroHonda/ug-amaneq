@@ -15,6 +15,10 @@ References
 
 ## Update history
 
+**2025.10.14**
+
+- Updating descriptions for firmware.
+
 **2025.5.29**
 
 - Updating descriptions for firmware and practical usage.

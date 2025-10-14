@@ -1,5 +1,20 @@
 # Release notes
 
+## Oct 14, 2025
+
+### New + Bugfix
+
+- Bugfix for previous version
+    - Fixed the bit position of the frameFlag1/2 swapped in the heartbeat delimiter flags.
+- New function
+    - 125 MHz system clock signal can be output from NIM-OUT ports by selecting it via IOM.
+- New firmware
+    - Str-LRTDC v2.A
+    - Str-LRTDC-10G v2.1
+    - Str-HRTDC Base v2.A (v2.9 is skipped)
+    - Mezzanine Str-HRTDC v2.9
+    - Mikumari Clock Hub v2.9
+
 ## May 29, 2025
 
 ### New + Bugfix

@@ -29,6 +29,7 @@ This firmware is basically the same as Str-LRTDC, but the data link protocol is 
 
 |Version|Date|Changes|
 |:----:|:----|:----|
+|v2.1|2025.10.14| - Fixed the bit position of the frameFlag1/2 swapped in the heartbeat delimiter flags. <br> - 125 MHz system clock signal can be output from NIM-OUT ports by selecting it via IOM. |
 |v2.0|2025.5.29| 1st version. Functionalities are the same as those of StrLrTdc v2.9.|
 
 ## Functions
